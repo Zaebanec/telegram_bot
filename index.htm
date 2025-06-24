@@ -92,7 +92,7 @@
             
             // --- НАШИ НАСТРОЙКИ ---
             // !!! ВАЖНО: Вставьте сюда ваш ngrok URL !!!
-            const API_BASE_URL = "https://61bf-195-16-73-19.ngrok-free.app";
+            const API_BASE_URL = "https://5023-195-16-73-19.ngrok-free.app";
 
             // 1. Получаем ID объекта из URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -105,7 +105,12 @@
 
             // 2. Асинхронно получаем занятые даты с нашего бэкенда
             fetch(`${API_BASE_URL}/api/unavailable_dates/${propertyId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(disabledDates => {
                     // 3. Инициализируем календарь с полученными датами
                     initializeCalendar(disabledDates);
@@ -136,6 +141,7 @@
                     },
                     actions: {
                         clickDay(event, self) {
+                            // self.selectedDates содержит даты в формате ГГГГ-ММ-ДД
                             updateSelection(self.selectedDates);
                         }
                     }
@@ -153,29 +159,33 @@
             let checkinDate = null;
             let checkoutDate = null;
 
-            function updateSelection(selected) {
-                if (!checkinDate || (checkinDate && checkoutDate)) {
-                    // Сценарий 1: Выбираем дату заезда
-                    checkinDate = selected[0];
-                    checkoutDate = null;
-                    infoPanel.textContent = `Заезд: ${checkinDate}. Выберите дату выезда.`;
-                    confirmButton.disabled = true;
+            function updateSelection(selectedDates) {
+                 // Сортируем даты на всякий случай
+                const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
 
-                } else if (checkinDate && !checkoutDate) {
-                    // Сценарий 2: Выбираем дату выезда
-                    const potentialCheckout = selected.find(d => d !== checkinDate);
-                    if (new Date(potentialCheckout) > new Date(checkinDate)) {
-                        checkoutDate = potentialCheckout;
-                        infoPanel.textContent = `Заезд: ${checkinDate}, Выезд: ${checkoutDate}`;
-                        confirmButton.disabled = false;
-                    } else {
-                        // Если выбрана дата раньше или та же самая, сбрасываем и начинаем заново
-                        checkinDate = potentialCheckout;
-                        checkoutDate = null;
-                        infoPanel.textContent = `Заезд: ${checkinDate}. Выберите дату выезда.`;
-                        confirmButton.disabled = true;
-                    }
+                if (sortedDates.length === 0) {
+                    checkinDate = null;
+                    checkoutDate = null;
+                    infoPanel.textContent = 'Выберите дату заезда';
+                    confirmButton.disabled = true;
+                } else if (sortedDates.length === 1) {
+                    checkinDate = sortedDates[0];
+                    checkoutDate = null;
+                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
+                    confirmButton.disabled = true;
+                } else if (sortedDates.length >= 2) {
+                    checkinDate = sortedDates[0];
+                    checkoutDate = sortedDates[sortedDates.length - 1]; // Берем последнюю выбранную как дату выезда
+                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                    confirmButton.disabled = false;
                 }
+            }
+            
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}.${month}`;
             }
 
 
