@@ -8,7 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.css" rel="stylesheet">
     <style>
         :root {
-            /* Используем переменные Telegram для адаптивной темы */
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #222222);
             --tg-hint: var(--tg-theme-hint-color, #999999);
@@ -16,7 +15,6 @@
             --tg-button: var(--tg-theme-button-color, #2481cc);
             --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-bg);
@@ -28,34 +26,26 @@
             height: 100vh;
             box-sizing: border-box;
         }
-
         #calendar-container {
             width: 100%;
-            max-width: 400px; /* Ограничиваем ширину на больших экранах */
+            max-width: 400px;
             margin: 0 auto;
+            flex-shrink: 0;
         }
-        
-        /* Стили для основной кнопки */
         #confirm-button {
             font-family: inherit;
             font-weight: 600;
             font-size: 16px;
             width: 100%;
             padding: 15px;
-            margin-top: 20px;
+            margin-top: 15px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             background-color: var(--tg-button);
             color: var(--tg-button-text);
-            transition: opacity 0.2s ease;
         }
-
-        #confirm-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        #confirm-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .info-panel {
             text-align: center;
             padding: 10px;
@@ -64,104 +54,118 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
+        /* Стили для панели отладки */
+        #debug-panel {
+            margin-top: auto;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 10px;
+            color: var(--tg-hint);
+            border-top: 1px solid var(--tg-hint);
+            overflow-y: auto;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
     <div id="calendar-container"></div>
-    
-    <div class="info-panel" id="info-panel">
-        Выберите дату заезда
-    </div>
-    
+    <div class="info-panel" id="info-panel">Загрузка календаря...</div>
     <button id="confirm-button" disabled>Подтвердить</button>
+    
+    <!-- Панель для отладочной информации -->
+    <div id="debug-panel">Техническая информация...</div>
 
-    <!-- Подключаем скрипт Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем скрипт календаря -->
     <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand(); // Раскрываем Web App на полный экран
-
             const confirmButton = document.getElementById('confirm-button');
             const infoPanel = document.getElementById('info-panel');
-            
-            // --- НАШИ НАСТРОЙКИ ---
-            // ИСПРАВЛЕНИЕ: Вставляем новый ngrok URL
+            const debugPanel = document.getElementById('debug-panel');
+
+            function logDebug(message) {
+                const p = document.createElement('p');
+                p.style.margin = '2px 0';
+                p.textContent = `> ${message}`;
+                debugPanel.appendChild(p);
+            }
+
+            tg.ready();
+            tg.expand();
+
             const API_BASE_URL = "https://0ea5-195-16-73-19.ngrok-free.app";
 
-            // 1. Получаем ID объекта из URL
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('property_id');
 
             if (!propertyId) {
                 infoPanel.textContent = "Ошибка: не найден ID объекта.";
+                logDebug("Error: property_id not found in URL.");
                 return;
             }
 
-            // 2. Асинхронно получаем занятые даты с нашего бэкенда
-            fetch(`${API_BASE_URL}/api/unavailable_dates/${propertyId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(disabledDates => {
-                    // 3. Инициализируем календарь с полученными датами
-                    initializeCalendar(disabledDates);
-                })
-                .catch(error => {
-                    console.error('Error fetching unavailable dates:', error);
-                    infoPanel.textContent = "Не удалось загрузить календарь. Попробуйте позже.";
-                });
+            const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
+            logDebug(`Connecting to: ${fetchUrl}`);
 
+            fetch(fetchUrl, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            })
+            .then(response => {
+                logDebug(`Received response with status: ${response.status}`);
+                if (!response.ok) {
+                    logDebug(`Response not OK. Status text: ${response.statusText}`);
+                    // Попытаемся прочитать тело ответа, даже если он не OK
+                    return response.text().then(text => {
+                         throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
+                    });
+                }
+                logDebug("Response OK. Parsing JSON...");
+                return response.json();
+            })
+            .then(disabledDates => {
+                logDebug(`Successfully parsed ${disabledDates.length} disabled dates.`);
+                infoPanel.textContent = "Выберите дату заезда";
+                initializeCalendar(disabledDates);
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                logDebug(`FETCH FAILED: ${error.message}`);
+                infoPanel.textContent = "Не удалось загрузить календарь. Попробуйте позже.";
+            });
 
             function initializeCalendar(disabledDates) {
                 const options = {
-                    // Тип календаря - выбор диапазона
                     type: 'multiple',
                     settings: {
                         range: {
-                            disablePast: true, // Нельзя выбрать прошедшие даты
-                            disabled: disabledDates, // Передаем список занятых дат
+                            disablePast: true,
+                            disabled: disabledDates,
                         },
-                        selection: {
-                            day: 'single', // Позволяем выбрать только одну дату за раз, но сохраняем диапазон
-                        },
-                        visibility: {
-                            theme: 'light', // Тема по умолчанию
-                            controls: true, 
-                        },
+                        selection: { day: 'single' },
+                        visibility: { theme: 'light', controls: true, },
                     },
                     actions: {
                         clickDay(event, self) {
-                            // self.selectedDates содержит даты в формате ГГГГ-ММ-ДД
                             updateSelection(self.selectedDates);
                         }
                     }
                 };
-                
-                // Адаптация под тему Telegram
                 if (tg.colorScheme === 'dark') {
                     options.settings.visibility.theme = 'dark';
                 }
-
                 const calendar = new VanillaCalendar('#calendar-container', options);
                 calendar.init();
+                logDebug("Calendar initialized.");
             }
 
             let checkinDate = null;
             let checkoutDate = null;
 
             function updateSelection(selectedDates) {
-                 // Сортируем даты на всякий случай
                 const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
-
                 if (sortedDates.length === 0) {
                     checkinDate = null;
                     checkoutDate = null;
@@ -174,21 +178,17 @@
                     confirmButton.disabled = true;
                 } else if (sortedDates.length >= 2) {
                     checkinDate = sortedDates[0];
-                    checkoutDate = sortedDates[sortedDates.length - 1]; // Берем последнюю выбранную как дату выезда
+                    checkoutDate = sortedDates[sortedDates.length - 1];
                     infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
                     confirmButton.disabled = false;
                 }
             }
             
             function formatDate(dateString) {
-                const date = new Date(dateString);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                return `${day}.${month}`;
+                const d = new Date(dateString);
+                return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
             }
 
-
-            // 4. Отправляем данные обратно в бот
             confirmButton.addEventListener('click', function () {
                 if (checkinDate && checkoutDate) {
                     const dataToSend = {
@@ -196,9 +196,7 @@
                         checkin_date: checkinDate,
                         checkout_date: checkoutDate
                     };
-                    // Отправляем данные в формате JSON
                     tg.sendData(JSON.stringify(dataToSend));
-                    // Закрываем Web App
                     tg.close();
                 }
             });
