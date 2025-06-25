@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Диагностика Сети</title>
+    <title>Выбор Дат</title>
+    <!-- Подключаем стили для календаря -->
+    <link href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.css" rel="stylesheet">
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-text: var(--tg-theme-text-color, #222222);
             --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -16,37 +20,66 @@
             color: var(--tg-text);
             margin: 0;
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             box-sizing: border-box;
         }
+        #calendar-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+        #confirm-button {
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--tg-button);
+            color: var(--tg-button-text);
+        }
+        #confirm-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .info-panel {
             text-align: center;
-            padding: 20px;
+            padding: 10px;
             background-color: rgba(128,128,128,0.1);
             border-radius: 8px;
             margin-bottom: 15px;
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 14px;
         }
         #debug-panel {
+            margin-top: auto;
             padding: 10px;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 10px;
             color: var(--tg-hint);
             border-top: 1px solid var(--tg-hint);
+            overflow-y: auto;
             word-break: break-all;
         }
     </style>
 </head>
 <body>
-    <div class="info-panel" id="info-panel">Запускаю тест сети...</div>
-    <div id="debug-panel">
-        <p><strong>Техническая информация:</strong></p>
-    </div>
+
+    <div id="calendar-container"></div>
+    <div class="info-panel" id="info-panel">Загрузка календаря...</div>
+    <button id="confirm-button" disabled>Подтвердить</button>
+    
+    <div id="debug-panel"><strong>Техническая информация:</strong></div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
+            const confirmButton = document.getElementById('confirm-button');
             const infoPanel = document.getElementById('info-panel');
             const debugPanel = document.getElementById('debug-panel');
 
@@ -60,32 +93,105 @@
             tg.ready();
             tg.expand();
 
-            // Используем общедоступный тестовый API вместо ngrok
-            const testApiUrl = "https://jsonplaceholder.typicode.com/todos/1";
-            logDebug(`Connecting to TEST API: ${testApiUrl}`);
+            // !!! ВАЖНО: Вставьте сюда ваш НОВЫЙ ngrok URL !!!
+            const API_BASE_URL = "https://<ваш-новый-ngrok-адрес>.ngrok-free.app";
 
-            fetch(testApiUrl)
+            const urlParams = new URLSearchParams(window.location.search);
+            const propertyId = urlParams.get('property_id');
+
+            if (!propertyId) {
+                infoPanel.textContent = "Ошибка: не найден ID объекта.";
+                logDebug("Error: property_id not found in URL.");
+                return;
+            }
+
+            const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
+            logDebug(`Connecting to: ${fetchUrl}`);
+
+            fetch(fetchUrl, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            })
             .then(response => {
                 logDebug(`Received response with status: ${response.status}`);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.text().then(text => {
+                         throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
+                    });
                 }
                 logDebug("Response OK. Parsing JSON...");
                 return response.json();
             })
-            .then(data => {
-                logDebug("Successfully parsed JSON data.");
-                logDebug(`Data: ${JSON.stringify(data)}`);
-                infoPanel.textContent = "✅ Тест сети успешен!";
-                infoPanel.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-                infoPanel.style.color = '#4CAF50';
+            .then(disabledDates => {
+                logDebug(`Successfully parsed ${disabledDates.length} disabled dates.`);
+                infoPanel.textContent = "Выберите дату заезда";
+                initializeCalendar(disabledDates);
             })
             .catch(error => {
                 console.error('Fetch Error:', error);
                 logDebug(`FETCH FAILED: ${error.message}`);
-                infoPanel.textContent = "❌ Тест сети провалился.";
-                infoPanel.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
-                infoPanel.style.color = '#F44336';
+                infoPanel.textContent = "Не удалось загрузить календарь. Попробуйте позже.";
+            });
+
+            function initializeCalendar(disabledDates) {
+                const options = {
+                    type: 'multiple',
+                    settings: {
+                        range: { disablePast: true, disabled: disabledDates },
+                        selection: { day: 'single' },
+                        visibility: { theme: 'light', controls: true },
+                    },
+                    actions: {
+                        clickDay(event, self) {
+                            updateSelection(self.selectedDates);
+                        }
+                    }
+                };
+                if (tg.colorScheme === 'dark') {
+                    options.settings.visibility.theme = 'dark';
+                }
+                const calendar = new VanillaCalendar('#calendar-container', options);
+                calendar.init();
+                logDebug("Calendar initialized.");
+            }
+
+            let checkinDate = null;
+            let checkoutDate = null;
+
+            function updateSelection(selectedDates) {
+                const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
+                if (sortedDates.length === 0) {
+                    checkinDate = null;
+                    checkoutDate = null;
+                    infoPanel.textContent = 'Выберите дату заезда';
+                    confirmButton.disabled = true;
+                } else if (sortedDates.length === 1) {
+                    checkinDate = sortedDates[0];
+                    checkoutDate = null;
+                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
+                    confirmButton.disabled = true;
+                } else if (sortedDates.length >= 2) {
+                    checkinDate = sortedDates[0];
+                    checkoutDate = sortedDates[sortedDates.length - 1];
+                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                    confirmButton.disabled = false;
+                }
+            }
+            
+            function formatDate(dateString) {
+                const d = new Date(dateString);
+                return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+
+            confirmButton.addEventListener('click', function () {
+                if (checkinDate && checkoutDate) {
+                    const dataToSend = {
+                        property_id: propertyId,
+                        checkin_date: checkinDate,
+                        checkout_date: checkoutDate
+                    };
+                    tg.sendData(JSON.stringify(dataToSend));
+                    tg.close();
+                }
             });
         });
     </script>
