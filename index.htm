@@ -89,10 +89,14 @@
             border-radius: 0;
         }
         .calendar-day.start-range {
+            background-color: var(--tg-button);
+            color: var(--tg-button-text);
             border-top-left-radius: 50%;
             border-bottom-left-radius: 50%;
         }
         .calendar-day.end-range {
+            background-color: var(--tg-button);
+            color: var(--tg-button-text);
             border-top-right-radius: 50%;
             border-bottom-right-radius: 50%;
         }
@@ -189,10 +193,8 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                // Корректировка для недели, начинающейся с Понедельника
                 const startingDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
 
-                // Добавляем пустые ячейки для дней предыдущего месяца
                 for (let i = 0; i < startingDay; i++) {
                     const paddingDay = document.createElement('div');
                     paddingDay.className = 'calendar-day padding';
@@ -207,7 +209,6 @@
                     const currentDate = new Date(currentYear, currentMonth, day);
                     const currentDateStr = currentDate.toISOString().split('T')[0];
 
-                    // Проверяем, не является ли дата прошедшей или заблокированной
                     if (currentDate < today || disabledDates.includes(currentDateStr)) {
                         dayEl.classList.add('disabled');
                     } else {
@@ -215,17 +216,18 @@
                         dayEl.addEventListener('click', onDayClick);
                     }
                     
-                    // Стилизация выбранных дат и диапазона
-                    if (checkinDate && currentDateStr === checkinDate) {
-                        dayEl.classList.add('selected', 'start-range');
+                    if (checkinDate && checkoutDate) {
+                        const checkin = new Date(checkinDate);
+                        const checkout = new Date(checkoutDate);
+                        if (currentDate >= checkin && currentDate <= checkout) {
+                            dayEl.classList.add('in-range');
+                            if (currentDate.getTime() === checkin.getTime()) dayEl.classList.add('start-range');
+                            if (currentDate.getTime() === checkout.getTime()) dayEl.classList.add('end-range');
+                        }
+                    } else if (checkinDate && currentDateStr === checkinDate) {
+                        dayEl.classList.add('selected');
                     }
-                    if (checkoutDate && currentDateStr === checkoutDate) {
-                        dayEl.classList.add('selected', 'end-range');
-                    }
-                    if (checkinDate && checkoutDate && currentDate > new Date(checkinDate) && currentDate < new Date(checkoutDate)) {
-                        dayEl.classList.add('in-range');
-                    }
-
+                    
                     calendarGrid.appendChild(dayEl);
                 }
             }
@@ -234,24 +236,43 @@
                 const selectedDateStr = event.target.dataset.date;
                 
                 if (!checkinDate || (checkinDate && checkoutDate)) {
-                    // Начало нового выбора или выбор первой даты
                     checkinDate = selectedDateStr;
                     checkoutDate = null;
                 } else {
-                    // Выбор второй даты
-                    if (new Date(selectedDateStr) > new Date(checkinDate)) {
-                        checkoutDate = selectedDateStr;
-                    } else {
-                        // Если выбрана дата раньше, начинаем заново
+                    const selectedD = new Date(selectedDateStr);
+                    const checkinD = new Date(checkinDate);
+                    
+                    // Проверяем, есть ли заблокированные даты между выбранными
+                    let isRangeClear = true;
+                    const start = selectedD > checkinD ? checkinD : selectedD;
+                    const end = selectedD > checkinD ? selectedD : checkinD;
+                    
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        if (disabledDates.includes(d.toISOString().split('T')[0])) {
+                            isRangeClear = false;
+                            break;
+                        }
+                    }
+
+                    if (!isRangeClear) {
+                        // Если диапазон содержит заблокированные даты, сбрасываем выбор
                         checkinDate = selectedDateStr;
                         checkoutDate = null;
+                        tg.HapticFeedback.notificationOccurred('error');
+                    } else {
+                        if (selectedD > checkinD) {
+                            checkoutDate = selectedDateStr;
+                        } else {
+                            checkoutDate = checkinDate;
+                            checkinDate = selectedDateStr;
+                        }
                     }
                 }
                 updateUI();
             }
 
             function updateUI() {
-                renderCalendar(); // Перерисовываем календарь для отображения стилей
+                renderCalendar();
                 if (!checkinDate) {
                     infoPanel.textContent = 'Выберите дату заезда';
                     confirmButton.disabled = true;
@@ -259,7 +280,8 @@
                     infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
                     confirmButton.disabled = true;
                 } else {
-                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                    const nights = (new Date(checkoutDate) - new Date(checkinDate)) / (1000 * 60 * 60 * 24);
+                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)} (${nights} ночей)`;
                     confirmButton.disabled = false;
                 }
             }
@@ -310,7 +332,7 @@
                 
                 renderWeekdays();
                 infoPanel.textContent = "Загрузка доступных дат...";
-
+                
                 // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
                 const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app";
                 const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
@@ -322,12 +344,11 @@
                     })
                     .then(data => {
                         disabledDates = data;
-                        infoPanel.textContent = "Выберите дату заезда";
-                        renderCalendar();
+                        updateUI();
                     })
                     .catch(error => {
                         console.error('Fetch Error:', error);
-                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok и перезапустите Web App.";
+                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
                     });
             }
 
