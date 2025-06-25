@@ -64,106 +64,117 @@
     <div class="info-panel" id="info-panel">Загрузка...</div>
     <button id="confirm-button" disabled>Подтвердить</button>
     
-    <!-- Переносим все скрипты в конец body - это самый надежный способ -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
     
+    <!-- ИСПРАВЛЕНИЕ: Мы обернули весь наш код в функцию runApp() -->
     <script>
-        // Мы можем быть уверены, что к этому моменту весь HTML и скрипты выше загружены
-        try {
-            const tg = window.Telegram.WebApp;
-            const confirmButton = document.getElementById('confirm-button');
-            const infoPanel = document.getElementById('info-panel');
+        function runApp() {
+            try {
+                const tg = window.Telegram.WebApp;
+                const confirmButton = document.getElementById('confirm-button');
+                const infoPanel = document.getElementById('info-panel');
 
-            tg.ready();
-            tg.expand();
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const propertyId = urlParams.get('property_id');
+                tg.ready();
+                tg.expand();
+                
+                // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
+                const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app"; 
+                const urlParams = new URLSearchParams(window.location.search);
+                const propertyId = urlParams.get('property_id');
 
-            if (!propertyId) {
-                infoPanel.textContent = "Ошибка: не найден ID объекта.";
-            } else {
-                // --- ИЗМЕНЕНИЕ: Используем "искусственные" (mock) данные вместо fetch ---
-                // Это позволяет нам отладить календарь без зависимости от ngrok и бэкенда.
-                infoPanel.textContent = "Выберите дату заезда";
-                // Представим, что с сервера пришли вот такие занятые даты:
-                const mockDisabledDates = ["2025-07-10", "2025-07-11", "2025-07-18", "2025-08-01"];
-                initializeCalendar(mockDisabledDates);
-            }
-
-            function initializeCalendar(disabledDates) {
-                const options = {
-                    type: 'multiple',
-                    settings: {
-                        range: { 
-                            disablePast: true,
-                            disabled: disabledDates 
-                        },
-                        selection: { 
-                            day: 'multiple-ranged', // Позволяет выбирать диапазон
-                        },
-                        visibility: { 
-                            theme: tg.colorScheme === 'dark' ? 'dark' : 'light',
-                            controls: true 
-                        },
-                    },
-                    actions: {
-                        clickDay(event, self) {
-                            // self.selectedDates теперь содержит массив выбранных дат
-                            updateSelection(self.selectedDates);
-                        }
-                    }
-                };
-                // VanillaCalendar теперь точно определен
-                const calendar = new VanillaCalendar('#calendar-container', options);
-                calendar.init();
-            }
-
-            let checkinDate = null;
-            let checkoutDate = null;
-
-            function updateSelection(selectedDates) {
-                 if (selectedDates.length >= 2) {
-                    // Сортируем на случай, если пользователь выбрал дату выезда раньше даты заезда
-                    const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
-                    checkinDate = sortedDates[0];
-                    checkoutDate = sortedDates[sortedDates.length - 1];
-                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
-                    confirmButton.disabled = false;
-                } else if (selectedDates.length === 1) {
-                    checkinDate = sortedDates[0];
-                    checkoutDate = null;
-                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
-                    confirmButton.disabled = true;
+                if (!propertyId) {
+                    infoPanel.textContent = "Ошибка: не найден ID объекта.";
                 } else {
-                    checkinDate = null;
-                    checkoutDate = null;
-                    infoPanel.textContent = 'Выберите дату заезда';
-                    confirmButton.disabled = true;
+                    const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
+                    fetch(fetchUrl, {
+                        headers: { 'ngrok-skip-browser-warning': 'true' }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        return response.json();
+                    })
+                    .then(disabledDates => {
+                        infoPanel.textContent = "Выберите дату заезда";
+                        initializeCalendar(disabledDates);
+                    })
+                    .catch(error => {
+                        console.error('Fetch Error:', error);
+                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
+                    });
                 }
-            }
-            
-            function formatDate(dateString) {
-                const d = new Date(dateString);
-                return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-            }
 
-            confirmButton.addEventListener('click', function () {
-                if (checkinDate && checkoutDate) {
-                    const dataToSend = {
-                        property_id: propertyId,
-                        checkin_date: checkinDate,
-                        checkout_date: checkoutDate
+                function initializeCalendar(disabledDates) {
+                    const options = {
+                        type: 'multiple',
+                        settings: {
+                            range: { 
+                                disablePast: true,
+                                disabled: disabledDates 
+                            },
+                            selection: { 
+                                day: 'multiple-ranged',
+                            },
+                            visibility: { 
+                                theme: tg.colorScheme === 'dark' ? 'dark' : 'light',
+                                controls: true 
+                            },
+                        },
+                        actions: {
+                            clickDay(event, self) {
+                                updateSelection(self.selectedDates);
+                            }
+                        }
                     };
-                    tg.sendData(JSON.stringify(dataToSend));
-                    tg.close();
+                    const calendar = new VanillaCalendar('#calendar-container', options);
+                    calendar.init();
                 }
-            });
-        } catch (e) {
-            // Если что-то пошло не так, выводим ошибку на экран
-            document.getElementById('info-panel').textContent = `Критическая ошибка: ${e.message}`;
+
+                let checkinDate = null;
+                let checkoutDate = null;
+
+                function updateSelection(selectedDates) {
+                     if (selectedDates.length >= 2) {
+                        const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
+                        checkinDate = sortedDates[0];
+                        checkoutDate = sortedDates[sortedDates.length - 1];
+                        infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                        confirmButton.disabled = false;
+                    } else if (selectedDates.length === 1) {
+                        checkinDate = sortedDates[0];
+                        checkoutDate = null;
+                        infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
+                        confirmButton.disabled = true;
+                    } else {
+                        checkinDate = null;
+                        checkoutDate = null;
+                        infoPanel.textContent = 'Выберите дату заезда';
+                        confirmButton.disabled = true;
+                    }
+                }
+                
+                function formatDate(dateString) {
+                    const d = new Date(dateString);
+                    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+                }
+
+                confirmButton.addEventListener('click', function () {
+                    if (checkinDate && checkoutDate) {
+                        const dataToSend = {
+                            property_id: propertyId,
+                            checkin_date: checkinDate,
+                            checkout_date: checkoutDate
+                        };
+                        tg.sendData(JSON.stringify(dataToSend));
+                        tg.close();
+                    }
+                });
+            } catch (e) {
+                document.getElementById('info-panel').textContent = `Критическая ошибка: ${e.message}`;
+            }
         }
     </script>
+    
+    <!-- ИСПРАВЛЕНИЕ: Загружаем библиотеку календаря и ПОСЛЕ ЕЕ ЗАГРУЗКИ вызываем наш код -->
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js" onload="runApp()"></script>
 </body>
 </html>
