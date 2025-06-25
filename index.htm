@@ -73,9 +73,11 @@
     
     <div id="debug-panel"><strong>Техническая информация:</strong></div>
 
+    <!-- Сначала загружаем все библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
-
+    
+    <!-- И ТОЛЬКО ПОТОМ выполняем наш собственный код -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
@@ -93,7 +95,6 @@
             tg.ready();
             tg.expand();
 
-            // !!! ВАЖНО: Вставьте сюда ваш НОВЫЙ ngrok URL !!!
             const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
 
             const urlParams = new URLSearchParams(window.location.search);
