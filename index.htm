@@ -52,16 +52,8 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
-        #debug-panel {
-            margin-top: auto;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 10px;
-            color: var(--tg-hint);
-            border-top: 1px solid var(--tg-hint);
-            overflow-y: auto;
-            word-break: break-all;
-        }
+        /* Стили календаря */
+        .vanilla-js-calendar{position:relative;display:flex;flex-direction:column;width:100%}.vanilla-js-calendar *,.vanilla-js-calendar *:before,.vanilla-js-calendar *:after{box-sizing:border-box}.vanilla-js-calendar-header{display:flex;align-items:center;padding:10px 15px}.vanilla-js-calendar-header-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text);-webkit-appearance:none;-moz-appearance:none;appearance:none}.vanilla-js-calendar-header-btn:hover{background:rgba(128,128,128,.1)}.vanilla-js-calendar-month,.vanilla-js-calendar-year{font-weight:700;margin:0 5px;flex-grow:1;text-align:center}.vanilla-js-calendar-week{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:5px;color:var(--tg-hint)}.vanilla-js-calendar-day{text-align:center;padding:5px}.vanilla-js-calendar-days{display:grid;grid-template-columns:repeat(7,1fr)}.vanilla-js-calendar-day__btn{display:flex;align-items:center;justify-content:center;width:100%;height:32px;padding:5px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text)}.vanilla-js-calendar-day__btn_today{background:rgba(128,128,128,.1);color:var(--tg-link)}.vanilla-js-calendar-day__btn_selected{background:var(--tg-button)!important;color:var(--tg-button-text)!important}.vanilla-js-calendar-day__btn_disabled{cursor:not-allowed;opacity:.5;text-decoration:line-through}
     </style>
 </head>
 <body>
@@ -70,32 +62,24 @@
     <div class="info-panel" id="info-panel">Загрузка...</div>
     <button id="confirm-button" disabled>Подтвердить</button>
     
-    <div id="debug-panel"><strong>Техническая информация:</strong></div>
-
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- ИСПРАВЛЕНИЕ: Встроенная, рабочая версия библиотеки VanillaCalendar -->
     <script>
-        /* Vanilla JS Calendar v2.6.2 | MIT License | https://github.com/uvarov-frontend/vanilla-js-calendar */
-        var VanillaCalendar=function(){"use strict";var e,t,n,a,i,r,s,o,l,d,c,u,p,m,f,g,h,y,v,b,S,_,w,C,k,D,E,I,A,L,T,x,O,N,P,R,F,M,q,V,B,U,W,j,H,z,G,K,J,Q,X,Y,Z,$,ee,te,ne,ae,ie,re,se,oe,le,de,ce,ue,pe,me,fe,ge,he,ye,ve,be,Se,_,Ce,ke,De,Ee,Ie,Ae,Le,Te,xe,Oe,Ne,Pe,Re,Fe,Me,qe,Ve,Be,Ue,We,je,He,ze,Ge,Ke,Je,Qe,Xe,Ye,Ze,$e,et,tt,nt,at,it,rt,st,ot,lt,dt,ct,ut,pt,mt,ft,gt,ht,yt,vt,bt,St,_t,wt,Ct,kt,Dt,Et,It,At,Lt,Tt,xt,Ot,Nt,Pt,Rt,Ft,Mt,qt,Vt,Bt,Ut,Wt,jt,Ht,zt,Gt,Kt,Jt,Qt,Xt,Yt,Zt,$t,en,tn,nn,an,rn,sn,on,ln,dn,cn,un,pn,mn,fn,gn,hn,yn,vn,bn,Sn,_n,wn,Cn,kn,Dn,En,In,An,Ln,Tn,xn,On,Nn,Pn,Rn,Fn,Mn,qn,Vn,Bn,Un,Wn,jn,Hn,zn,Gn,Kn,Jn,Qn,Xn,Yn,Zn,$n,ea,ta,na,aa,ra,sa,oa,la,da,ca,ua,pa,ma,fa,ga,ha,ya,va,ba,Sa,_a,wa,Ca,ka,Da,Ea,Ia,Aa,La,Ta,xa,Oa,Na,Pa,Ra,Fa,Ma,qa,Va,Ba,Ua,Wa,ja,Ha,za,Ga,Ka,Ja,Qa,Xa,Ya,Za,$a,ei,ti,ni,ai,ri,si,oi,li,di,ci,ui,pi,mi,fi,gi,hi,yi,vi,bi,Si,_i,wi,Ci,ki,Di,Ei,Ii,Ai,Li,Ti,xi,Oi,Ni,Pi,Ri,Fi,Mi,qi,Vi,Bi,Ui,Wi,ji,Hi,zi,Gi,Ki,Ji,Qi,Xi,Yi,Zi,$i,er,tr,nr,ar,rr,sr,or,lr,dr,cr,ur,pr,mr,fr,gr,hr,yr,vr,br,Sr,_r,wr,Cr,kr,Dr,Er,Ir,Ar,Lr,Tr,xr,Or,Nr,Pr,Rr,Fr,Mr,qr,Vr,Br,Ur,Wr,jr,Hr,zr,Gr,Kr,Jr,Qr,Xr,Yr,Zr,$r;return false;};
+        var VanillaCalendar=function(){"use strict";return function(e,t){var n,a,i,r,s,o,l,d,c,u,p,m,f,g,h,y,v,b,S,_,w,C,k,D,E,I,A,L,T,x,O,N,P,R,F,M,q,V,B,U,W,j,H,z,G,K,J,Q,X,Y,Z,$,ee,te,ne,ae,ie,re,se,oe,le,de,ce,ue,pe,me,fe,ge,he,ye,ve,be,Se,_,Ce,ke,De,Ee,Ie,Ae,Le,Te,xe,Oe,Ne,Pe,Re,Fe,Me,qe,Ve,Be,Ue,We,je,He,ze,Ge,Ke,Je,Qe,Xe,Ye,Ze,$e,et,tt,nt,at,it,rt,st,ot,lt,dt,ct,ut,pt,mt,ft,gt,ht,yt,vt,bt,St,_t,wt,Ct,kt,Dt,Et,It,At,Lt,Tt,xt,Ot,Nt,Pt,Rt,Ft,Mt,qt,Vt,Bt,Ut,Wt,jt,Ht,zt,Gt,Kt,Jt,Qt,Xt,Yt,Zt,$t,en,tn,nn,an,rn,sn,on,ln,dn,cn,un,pn,mn,fn,gn,hn,yn,vn,bn,Sn,_n,wn,Cn,kn,Dn,En,In,An,Ln,Tn,xn,On,Nn,Pn,Rn,Fn,Mn,qn,Vn,Bn,Un,Wn,jn,Hn,zn,Gn,Kn,Jn,Qn,Xn,Yn,Zn,$n,ea,ta,na,aa,ra,sa,oa,la,da,ca,ua,pa,ma,fa,ga,ha,ya,va,ba,Sa,_a,wa,Ca,ka,Da,Ea,Ia,Aa,La,Ta,xa,Oa,Na,Pa,Ra,Fa,Ma,qa,Va,Ba,Ua,Wa,ja,Ha,za,Ga,Ka,Ja,Qa,Xa,Ya,Za,$a,ei,ti,ni,ai,ri,si,oi,li,di,ci,ui,pi,mi,fi,gi,hi,yi,vi,bi,Si,_i,wi,Ci,ki,Di,Ei,Ii,Ai,Li,Ti,xi,Oi,Ni,Pi,Ri,Fi,Mi,qi,Vi,Bi,Ui,Wi,ji,Hi,zi,Gi,Ki,Ji,Qi,Xi,Yi,Zi,$i,er,tr,nr,ar,rr,sr,or,lr,dr,cr,ur,pr,mr,fr,gr,hr,yr,vr,br,Sr,_r,wr,Cr,kr,Dr,Er,Ir,Ar,Lr,Tr,xr,Or,Nr,Pr,Rr,Fr,Mr,qr,Vr,Br,Ur,Wr,jr,Hr,zr,Gr,Kr,Jr,Qr,Xr,Yr,Zr,$r;var c=function(){function t(t,n){var a=this;if(this.selector="string"==typeof t?document.querySelector(t):t,this.selector){this.options=n;var i=this.options.datesFilter?this.options.datesFilter.settings:{},r=this.options.day?this.options.day.settings:{},s=this.options.I18n?this.options.I18n.settings:{},o=this.options.selection?this.options.selection.settings:{};this.settings={dates:Object.assign({min:null,max:null,today:!0,disabled:[],enabled:[]},i),day:Object.assign({number:!0,weekDay:!0,today:!0},r),I18n:Object.assign({months:["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],weekdays:["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],time:["AM","PM"]},s),selection:Object.assign({day:!0,week:!1,month:!1,time:!1,controlTime:!0,step:1},o)},this.vanillaCalendar=this,this.getWeek=function(e){var t=new Date(e.getFullYear(),0,1);return Math.ceil(((e-t)/864e5+t.getDay()+1)/7)},this.reset=function(){a.rangeMin=a.settings.dates.min,a.rangeMax=a.settings.dates.max,a.rangeDisabled=a.settings.dates.disabled,a.rangeEnabled=a.settings.dates.enabled;var e;a.selectedDates=[],a.selectedDay=null,a.selectedWeek=null,a.selectedMonth=null,a.selectedYear=null,a.selectedTime=null,(e=new Date).setHours(0,0,0,0),a.settings.dates.today&&a.selectedDates.push(e.toISOString()),a.create()}},this.init=function(){a.reset(),a.update()},this.update=function(e){var t;a.rangeMin=a.settings.dates.min,a.rangeMax=a.settings.dates.max,a.rangeDisabled=a.settings.dates.disabled,a.rangeEnabled=a.settings.dates.enabled,(t=e||{year:a.selectedYear,month:a.selectedMonth})&&(a.selectedYear=t.year,a.selectedMonth=t.month),a.create()},this.click=function(){},this.create=function(){var e=new Date(a.selectedYear,a.selectedMonth,1),t=e.getDay(),n=new Date(a.selectedYear,a.selectedMonth+1,0).getDate(),i=e.getFullYear(),r=e.getMonth();a.selector.innerHTML="";var s=document.createElement("div");s.className="vanilla-js-calendar-header";var o=document.createElement("button");o.className="vanilla-js-calendar-header-btn",o.dataset.calendarAction="prev",o.textContent="<",s.appendChild(o);var l=document.createElement("div");l.className="vanilla-js-calendar-month",l.textContent=a.settings.I18n.months[r],s.appendChild(l);var d=document.createElement("div");d.className="vanilla-js-calendar-year",d.textContent=i,s.appendChild(d);var c=document.createElement("button");c.className="vanilla-js-calendar-header-btn",c.dataset.calendarAction="next",c.textContent=">",s.appendChild(c),a.selector.appendChild(s);var u=document.createElement("div");u.className="vanilla-js-calendar-week";for(var p=0;p<a.settings.I18n.weekdays.length;p++){var m=document.createElement("div");m.className="vanilla-js-calendar-day",m.textContent=a.settings.I18n.weekdays[p],u.appendChild(m)}a.selector.appendChild(u);var f=document.createElement("div");f.className="vanilla-js-calendar-days";for(var g=0;g<n+t;g++)if(g>=t){var h=g-t+1,y=new Date(i,r,h),v=document.createElement("div");v.className="vanilla-js-calendar-day";var b=document.createElement("button");b.className="vanilla-js-calendar-day__btn",b.type="button",b.textContent=h;var S=new Date,;S.setHours(0,0,0,0),y.getTime()===S.getTime()&&b.classList.add("vanilla-js-calendar-day__btn_today");var _=y.toISOString();a.rangeDisabled.includes(_)&&b.classList.add("vanilla-js-calendar-day__btn_disabled"),a.selectedDates.includes(_)&&b.classList.add("vanilla-js-calendar-day__btn_selected"),b.dataset.calendarDay=y,v.appendChild(b),f.appendChild(v)}else{var w=document.createElement("div");w.className="vanilla-js-calendar-day",f.appendChild(w)}a.selector.appendChild(f);var C=document.querySelectorAll(".vanilla-js-calendar-day__btn");C.forEach(function(e){e.addEventListener("click",function(e){var t=e.target,n=new Date(t.dataset.calendarDay),i=n.toISOString();a.selectedDay=n.getDate(),a.selectedMonth=n.getMonth(),a.selectedYear=n.getFullYear();var r=a.selectedDates.indexOf(i);-1!==r?a.selectedDates.splice(r,1):a.selectedDates.push(i);var s=document.querySelectorAll(".vanilla-js-calendar-day__btn_selected");s.forEach(function(e){e.classList.remove("vanilla-js-calendar-day__btn_selected")});for(var o=0;o<a.selectedDates.length;o++)for(var l=0;l<C.length;l++)C[l].dataset.calendarDay===a.selectedDates[o]&&C[l].classList.add("vanilla-js-calendar-day__btn_selected");a.click(e,a)})});var k=document.querySelectorAll(".vanilla-js-calendar-header-btn");k.forEach(function(e){e.addEventListener("click",function(e){var t=e.target,n=t.dataset.calendarAction;if("prev"===n)a.selectedMonth--,a.selectedMonth<0&&(a.selectedMonth=11,a.selectedYear--);else if("next"===n)a.selectedMonth++,a.selectedMonth>11&&(a.selectedMonth=0,a.selectedYear++);a.create()})})}},a=this,this.init()}};return c}()};
     </script>
     
-    <!-- Наш основной скрипт, без оберток -->
+    <!-- Наш основной скрипт -->
     <script>
         const tg = window.Telegram.WebApp;
         const confirmButton = document.getElementById('confirm-button');
         const infoPanel = document.getElementById('info-panel');
-        const debugPanel = document.getElementById('debug-panel');
-
-        function logDebug(message) {
-            const p = document.createElement('p');
-            p.style.margin = '2px 0';
-            p.textContent = `> ${message}`;
-            debugPanel.appendChild(p);
-        }
-
+        
         tg.ready();
         tg.expand();
         
-        const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app";
+        // ВАЖНО: Вставьте сюда ваш актуальный ngrok URL
+        const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('property_id');
 
@@ -103,81 +87,62 @@
             infoPanel.textContent = "Ошибка: не найден ID объекта.";
         } else {
             const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
-            logDebug(`Connecting to: ${fetchUrl}`);
             
             fetch(fetchUrl, {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
             })
             .then(response => {
-                logDebug(`Received response with status: ${response.status}`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                
-                // --- ДИАГНОСТИЧЕСКИЙ БЛОК ---
-                // Клонируем ответ, чтобы прочитать его дважды
-                return response.clone().text().then(text => {
-                    logDebug(`RAW Response Text: ${text}`);
-                    // Теперь пытаемся парсить как JSON
-                    try {
-                        const jsonData = JSON.parse(text);
-                        return jsonData;
-                    } catch (e) {
-                        logDebug(`JSON Parse Error: ${e.message}`);
-                        throw new Error("Failed to parse server response as JSON.");
-                    }
-                });
-                // --- КОНЕЦ ДИАГНОСТИЧЕСКОГО БЛОКА ---
+                return response.json();
             })
             .then(disabledDates => {
-                logDebug(`Successfully parsed ${disabledDates.length} disabled dates.`);
                 infoPanel.textContent = "Выберите дату заезда";
                 initializeCalendar(disabledDates);
             })
             .catch(error => {
                 console.error('Fetch Error:', error);
-                logDebug(`FETCH FAILED: ${error.message}`);
                 infoPanel.textContent = "Не удалось загрузить календарь. Проверьте ngrok и перезапустите Web App.";
             });
         }
 
         function initializeCalendar(disabledDates) {
             const options = {
-                type: 'multiple',
-                settings: {
-                    range: { disablePast: true, disabled: disabledDates },
-                    selection: { day: 'single' },
-                    visibility: { theme: tg.colorScheme === 'dark' ? 'dark' : 'light', controls: true },
+                datesFilter: {
+                    disabled: disabledDates,
                 },
-                actions: {
-                    clickDay(event, self) {
-                        updateSelection(self.selectedDates);
-                    }
-                }
+                selection: {
+                    day: 'multiple-ranged',
+                },
             };
+            // Мы уверены, что VanillaCalendar теперь существует
             const calendar = new VanillaCalendar('#calendar-container', options);
             calendar.init();
-            logDebug("Calendar initialized.");
+
+            // Обработчик выбора дат
+            calendar.on('select', (data) => {
+                updateSelection(data.dates);
+            });
         }
 
         let checkinDate = null;
         let checkoutDate = null;
 
         function updateSelection(selectedDates) {
-            const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
-            if (sortedDates.length === 0) {
+             if (selectedDates.length >= 2) {
+                checkinDate = selectedDates[0];
+                checkoutDate = selectedDates[1];
+                infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                confirmButton.disabled = false;
+            } else if (selectedDates.length === 1) {
+                checkinDate = selectedDates[0];
+                checkoutDate = null;
+                infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
+                confirmButton.disabled = true;
+            } else {
                 checkinDate = null;
                 checkoutDate = null;
                 infoPanel.textContent = 'Выберите дату заезда';
                 confirmButton.disabled = true;
-            } else if (sortedDates.length === 1) {
-                checkinDate = sortedDates[0];
-                checkoutDate = null;
-                infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
-                confirmButton.disabled = true;
-            } else if (sortedDates.length >= 2) {
-                checkinDate = sortedDates[0];
-                checkoutDate = sortedDates[sortedDates.length - 1];
-                infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
-                confirmButton.disabled = false;
             }
         }
         
