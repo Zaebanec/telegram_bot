@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выбор Дат</title>
+    <title>Бронирование</title>
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
@@ -61,50 +61,53 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 40px;
-            width: 100%;
-            font-size: 14px;
+            text-align: center;
             border-radius: 50%;
         }
         .calendar-weekday {
-            color: var(--tg-hint);
-            font-size: 12px;
+             height: 30px;
+             color: var(--tg-hint);
+             font-size: 12px;
         }
         .calendar-day {
             cursor: pointer;
             border: 1px solid transparent;
             transition: background-color 0.2s, color 0.2s;
+            flex-direction: column;
+            padding: 2px 0;
+            height: 44px;
+        }
+        .day-number {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .day-price {
+            font-size: 9px;
+            color: var(--tg-hint);
         }
         .calendar-day:not(.disabled):hover {
             background-color: var(--tg-secondary-bg);
         }
-        .calendar-day.selected {
+        .calendar-day.selected, .calendar-day.start-range, .calendar-day.end-range {
             background-color: var(--tg-button);
             color: var(--tg-button-text);
             border-color: var(--tg-button);
+        }
+        .calendar-day.selected .day-price, .calendar-day.start-range .day-price, .calendar-day.end-range .day-price {
+            color: var(--tg-button-text);
         }
         .calendar-day.in-range {
             background-color: var(--tg-secondary-bg);
             color: var(--tg-text);
             border-radius: 0;
         }
-        .calendar-day.start-range {
-            background-color: var(--tg-button);
-            color: var(--tg-button-text);
-            border-top-left-radius: 50%;
-            border-bottom-left-radius: 50%;
-        }
-        .calendar-day.end-range {
-            background-color: var(--tg-button);
-            color: var(--tg-button-text);
-            border-top-right-radius: 50%;
-            border-bottom-right-radius: 50%;
-        }
         .calendar-day.disabled {
             color: var(--tg-hint);
             cursor: not-allowed;
-            text-decoration: line-through;
             opacity: 0.6;
+        }
+        .calendar-day.disabled .day-number {
+            text-decoration: line-through;
         }
         .calendar-day.padding {
             visibility: hidden;
@@ -167,7 +170,7 @@
 
             let currentMonth = new Date().getMonth();
             let currentYear = new Date().getFullYear();
-            let disabledDates = [];
+            let calendarData = {}; // { 'YYYY-MM-DD': { status, price } }
             let checkinDate = null;
             let checkoutDate = null;
 
@@ -183,6 +186,43 @@
                     weekdaysGrid.appendChild(dayEl);
                 });
             }
+
+            function fetchAndRenderCalendar() {
+                infoPanel.textContent = 'Загрузка данных...';
+                confirmButton.disabled = true;
+
+                // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
+                const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
+                const urlParams = new URLSearchParams(window.location.search);
+                const propertyId = urlParams.get('property_id');
+
+                if (!propertyId) {
+                    infoPanel.textContent = "Ошибка: не найден ID объекта.";
+                    return;
+                }
+
+                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${currentYear}&month=${currentMonth + 1}`;
+                
+                fetch(fetchUrl, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Ошибка сети');
+                        return response.json();
+                    })
+                    .then(data => {
+                        calendarData = {};
+                        data.forEach(dayInfo => {
+                            calendarData[dayInfo.date] = {
+                                status: dayInfo.status,
+                                price: dayInfo.price
+                            };
+                        });
+                        updateUI();
+                    })
+                    .catch(error => {
+                        console.error('Fetch Error:', error);
+                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok.";
+                    });
+            }
             
             function renderCalendar() {
                 calendarGrid.innerHTML = '';
@@ -190,9 +230,6 @@
                 
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
                 const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
                 const startingDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
 
                 for (let i = 0; i < startingDay; i++) {
@@ -204,16 +241,28 @@
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayEl = document.createElement('div');
                     dayEl.className = 'calendar-day';
-                    dayEl.textContent = day;
+                    
+                    const dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day;
+                    dayEl.appendChild(dayNumber);
 
                     const currentDate = new Date(currentYear, currentMonth, day);
                     const currentDateStr = currentDate.toISOString().split('T')[0];
+                    const dayData = calendarData[currentDateStr];
 
-                    if (currentDate < today || disabledDates.includes(currentDateStr)) {
-                        dayEl.classList.add('disabled');
-                    } else {
-                        dayEl.dataset.date = currentDateStr;
-                        dayEl.addEventListener('click', onDayClick);
+                    if (dayData) {
+                        if (dayData.status !== 'available') {
+                            dayEl.classList.add('disabled');
+                        } else {
+                            dayEl.dataset.date = currentDateStr;
+                            dayEl.addEventListener('click', onDayClick);
+
+                            const dayPrice = document.createElement('div');
+                            dayPrice.className = 'day-price';
+                            dayPrice.textContent = dayData.price ? `${dayData.price}` : '';
+                            dayEl.appendChild(dayPrice);
+                        }
                     }
                     
                     if (checkinDate && checkoutDate) {
@@ -233,7 +282,7 @@
             }
             
             function onDayClick(event) {
-                const selectedDateStr = event.target.dataset.date;
+                const selectedDateStr = event.currentTarget.dataset.date;
                 
                 if (!checkinDate || (checkinDate && checkoutDate)) {
                     checkinDate = selectedDateStr;
@@ -242,30 +291,11 @@
                     const selectedD = new Date(selectedDateStr);
                     const checkinD = new Date(checkinDate);
                     
-                    // Проверяем, есть ли заблокированные даты между выбранными
-                    let isRangeClear = true;
-                    const start = selectedD > checkinD ? checkinD : selectedD;
-                    const end = selectedD > checkinD ? selectedD : checkinD;
-                    
-                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                        if (disabledDates.includes(d.toISOString().split('T')[0])) {
-                            isRangeClear = false;
-                            break;
-                        }
-                    }
-
-                    if (!isRangeClear) {
-                        // Если диапазон содержит заблокированные даты, сбрасываем выбор
+                    if (selectedD > checkinD) {
+                        checkoutDate = selectedDateStr;
+                    } else {
                         checkinDate = selectedDateStr;
                         checkoutDate = null;
-                        tg.HapticFeedback.notificationOccurred('error');
-                    } else {
-                        if (selectedD > checkinD) {
-                            checkoutDate = selectedDateStr;
-                        } else {
-                            checkoutDate = checkinDate;
-                            checkinDate = selectedDateStr;
-                        }
                     }
                 }
                 updateUI();
@@ -280,10 +310,26 @@
                     infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
                     confirmButton.disabled = true;
                 } else {
-                    const nights = (new Date(checkoutDate) - new Date(checkinDate)) / (1000 * 60 * 60 * 24);
-                    infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)} (${nights} ночей)`;
+                    const { total, nights } = calculateTotal();
+                    infoPanel.textContent = `Итого за ${nights} ночей: ${total} руб.`;
                     confirmButton.disabled = false;
                 }
+            }
+            
+            function calculateTotal() {
+                let total = 0;
+                let nights = 0;
+                const start = new Date(checkinDate);
+                const end = new Date(checkoutDate);
+
+                for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    if (calendarData[dateStr] && calendarData[dateStr].price) {
+                        total += calendarData[dateStr].price;
+                        nights++;
+                    }
+                }
+                return { total, nights };
             }
 
             function formatDate(dateStr) {
@@ -297,7 +343,7 @@
                     currentMonth = 11;
                     currentYear--;
                 }
-                renderCalendar();
+                fetchAndRenderCalendar();
             });
 
             nextMonthBtn.addEventListener('click', () => {
@@ -306,53 +352,25 @@
                     currentMonth = 0;
                     currentYear++;
                 }
-                renderCalendar();
+                fetchAndRenderCalendar();
             });
 
             confirmButton.addEventListener('click', () => {
                 if (checkinDate && checkoutDate) {
+                    const { total } = calculateTotal();
                     const dataToSend = {
-                        property_id: propertyId,
+                        property_id: new URLSearchParams(window.location.search).get('property_id'),
                         checkin_date: checkinDate,
-                        checkout_date: checkoutDate
+                        checkout_date: checkoutDate,
+                        total_price: total
                     };
                     tg.sendData(JSON.stringify(dataToSend));
                     tg.close();
                 }
             });
 
-            function main() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const propertyId = urlParams.get('property_id');
-                
-                if (!propertyId) {
-                    infoPanel.textContent = "Ошибка: не найден ID объекта.";
-                    return;
-                }
-                
-                renderWeekdays();
-                infoPanel.textContent = "Загрузка доступных дат...";
-                
-                // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
-                const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app";
-                const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
-
-                fetch(fetchUrl, { headers: { 'ngrok-skip-browser-warning': 'true' } })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Ошибка сети');
-                        return response.json();
-                    })
-                    .then(data => {
-                        disabledDates = data;
-                        updateUI();
-                    })
-                    .catch(error => {
-                        console.error('Fetch Error:', error);
-                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
-                    });
-            }
-
-            main();
+            renderWeekdays();
+            fetchAndRenderCalendar();
         });
     </script>
 </body>
