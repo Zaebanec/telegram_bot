@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Выбор Дат</title>
-    <!-- Подключаем стили для календаря -->
-    <link href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.css" rel="stylesheet">
+    <!-- Встроенные стили для новой библиотеки flatpickr -->
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
@@ -13,6 +12,7 @@
             --tg-hint: var(--tg-theme-hint-color, #999999);
             --tg-button: var(--tg-theme-button-color, #2481cc);
             --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --flatpickr-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -30,7 +30,6 @@
             width: 100%;
             max-width: 400px;
             margin: 0 auto;
-            flex-shrink: 0;
         }
         #confirm-button {
             font-family: inherit;
@@ -54,127 +53,105 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
-         /* Стили календаря */
-        .vanilla-js-calendar{position:relative;display:flex;flex-direction:column;width:100%}.vanilla-js-calendar *,.vanilla-js-calendar *:before,.vanilla-js-calendar *:after{box-sizing:border-box}.vanilla-js-calendar-header{display:flex;align-items:center;padding:10px 15px}.vanilla-js-calendar-header-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text);-webkit-appearance:none;-moz-appearance:none;appearance:none}.vanilla-js-calendar-header-btn:hover{background:rgba(128,128,128,.1)}.vanilla-js-calendar-month,.vanilla-js-calendar-year{font-weight:700;margin:0 5px;flex-grow:1;text-align:center}.vanilla-js-calendar-week{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:5px;color:var(--tg-hint)}.vanilla-js-calendar-day{text-align:center;padding:5px}.vanilla-js-calendar-days{display:grid;grid-template-columns:repeat(7,1fr)}.vanilla-js-calendar-day__btn{display:flex;align-items:center;justify-content:center;width:100%;height:32px;padding:5px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text)}.vanilla-js-calendar-day__btn_today{background:rgba(128,128,128,.1);color:var(--tg-link)}.vanilla-js-calendar-day__btn_selected{background:var(--tg-button)!important;color:var(--tg-button-text)!important}.vanilla-js-calendar-day__btn_disabled{cursor:not-allowed;opacity:.5;text-decoration:line-through}
+        /* Стили для flatpickr */
+        .flatpickr-calendar{background:transparent;opacity:0;display:none;text-align:center;visibility:hidden;padding:0;border:0;font-size:90%;border-radius:3px;position:absolute;right:0;left:0}.flatpickr-calendar.open,.flatpickr-calendar.inline{opacity:1;max-height:640px;visibility:visible}.flatpickr-calendar.open{display:inline-block;z-index:99999}.flatpickr-calendar.animate.open{animation:fpFadeInDown .3s cubic-bezier(.23,1,.32,1)}.flatpickr-calendar.inline{display:block;position:relative;top:2px}.flatpickr-calendar.static{position:absolute;top:calc(100% + 2px)}.flatpickr-calendar.static.open{z-index:999;display:block}.flatpickr-calendar.multiMonth .flatpickr-days .dayContainer:nth-child(n+2) .flatpickr-day.inRange:nth-child(7n+1){box-shadow:-2px 0 0 #e6e6e6,5px 0 0 #e6e6e6}.flatpickr-calendar.multiMonth .flatpickr-weekwrapper .flatpickr-weeks-left{float:left}.flatpickr-calendar.multiMonth .flatpickr-weekwrapper .flatpickr-weeks-left,.flatpickr-calendar.multiMonth .flatpickr-weekwrapper .flatpickr-weeks-right{pointer-events:none}.flatpickr-calendar.multiMonth .flatpickr-weekwrapper .flatpickr-weeks-right{float:right}.flatpickr-calendar.multiMonth .flatpickr-month,.flatpickr-calendar.multiMonth .flatpickr-prev-month,.flatpickr-calendar.multiMonth .flatpickr-next-month{float:left;width:50%}.flatpickr-calendar.multiMonth .flatpickr-month:nth-child(2),.flatpickr-calendar.multiMonth .flatpickr-prev-month:nth-child(2),.flatpickr-calendar.multiMonth .flatpickr-next-month:nth-child(2){float:right}.flatpickr-calendar.multiMonth .flatpickr-days{width:100%}.flatpickr-calendar .hasWeeks .flatpickr-days{border-left:0}.flatpickr-calendar.no-arrows .flatpickr-month{float:none;width:100%}.flatpickr-calendar.hasTime .flatpickr-time{height:40px;border-top:1px solid var(--flatpickr-bg)}.flatpickr-calendar.hasTime.no-arrows .flatpickr-time{height:auto}.flatpickr-calendar:before,.flatpickr-calendar:after{position:absolute;display:block;pointer-events:none;border:solid transparent;content:"";height:0;width:0;left:22px}.flatpickr-calendar.rightMost:before,.flatpickr-calendar.rightMost:after{left:auto;right:22px}.flatpickr-calendar.arrowTop:before,.flatpickr-calendar.arrowTop:after{border-width:5px;top:-5px}.flatpickr-calendar.arrowTop:before{border-bottom-color:var(--flatpickr-bg)}.flatpickr-calendar.arrowTop:after{border-bottom-color:var(--tg-bg)}.flatpickr-calendar.arrowBottom:before,.flatpickr-calendar.arrowBottom:after{border-width:5px;bottom:-5px}.flatpickr-calendar.arrowBottom:before{border-top-color:var(--flatpickr-bg)}.flatpickr-calendar.arrowBottom:after{border-top-color:var(--tg-bg)}.flatpickr-calendar.dark{background:var(--tg-bg);color:var(--tg-text)}.flatpickr-month{background:transparent;color:var(--tg-text);fill:var(--tg-text);height:34px;line-height:1;text-align:center;position:relative;user-select:none;overflow:hidden;flex:1}.flatpickr-prev-month,.flatpickr-next-month{text-decoration:none;cursor:pointer;position:absolute;top:0;height:34px;padding:10px;z-index:3;color:var(--tg-text);fill:var(--tg-text)}.flatpickr-prev-month.flatpickr-disabled,.flatpickr-next-month.flatpickr-disabled{display:none}.flatpickr-prev-month i,.flatpickr-next-month i{position:relative}.flatpickr-prev-month.flatpickr-prev-month,.flatpickr-next-month.flatpickr-prev-month{left:0}.flatpickr-prev-month.flatpickr-next-month,.flatpickr-next-month.flatpickr-next-month{right:0}.flatpickr-prev-month:hover,.flatpickr-next-month:hover{color:var(--tg-link)}.flatpickr-prev-month:hover svg,.flatpickr-next-month:hover svg{fill:var(--tg-link)}.flatpickr-prev-month svg,.flatpickr-next-month svg{width:14px;height:14px}.flatpickr-prev-month svg path,.flatpickr-next-month svg path{transition:fill .1s;fill:inherit}.numInputWrapper{position:relative;height:auto}.numInputWrapper input,.numInputWrapper span{display:inline-block}.numInputWrapper input{width:100%}.numInputWrapper input::-ms-clear{display:none}.numInputWrapper input::-webkit-outer-spin-button,.numInputWrapper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.numInputWrapper span{position:absolute;right:0;width:14px;padding:0 4px 0 2px;height:50%;line-height:50%;opacity:.5;cursor:pointer;border:1px solid #393939;box-sizing:border-box}.numInputWrapper span:hover{background:rgba(0,0,0,.1)}.numInputWrapper span:active{background:rgba(0,0,0,.2)}.num_wrapper span.arrowUp{top:0;border-bottom:0}.num_wrapper span.arrowDown{top:50%}.flatpickr-current-month{font-size:135%;line-height:inherit;font-weight:300;color:inherit;position:absolute;width:75%;left:12.5%;padding:7.18px 0 0;display:inline-block;text-align:center;transform:translate3d(0,0,0)}.flatpickr-current-month span.cur-month{font-family:inherit;font-weight:700;color:inherit;display:inline-block;margin-left:5px;padding:0}.flatpickr-current-month span.cur-month:hover{background:rgba(0,0,0,.05)}.flatpickr-current-month .numInputWrapper{width:6ch;display:inline-block}.flatpickr-current-month .numInputWrapper span.arrowUp:after{content:"▲"}.flatpickr-current-month .numInputWrapper span.arrowDown:after{content:"▼"}.flatpickr-current-month input.cur-year{background:transparent;box-sizing:border-box;color:inherit;cursor:text;padding:0 .5ch;margin:0;display:inline-block;font-size:inherit;font-family:inherit;font-weight:300;line-height:inherit;height:auto;border:0;border-radius:0;vertical-align:initial;-webkit-appearance:textfield;-moz-appearance:textfield;appearance:textfield}.flatpickr-current-month input.cur-year:focus{outline:0}.flatpickr-current-month input.cur-year[disabled],.flatpickr-current-month input.cur-year[disabled]:hover{font-size:100%;color:rgba(255,255,255,.5);background:transparent;pointer-events:none}.flatpickr-current-month.flatpickr-monthDropdown-months{border-radius:0 0 2px 2px;padding:0;outline:0}.flatpickr-current-month.flatpickr-monthDropdown-months .flatpickr-monthDropdown-month{background-color:transparent;outline:none;padding:0;border:0;border-radius:2px;color:inherit;font-family:inherit;font-size:inherit;cursor:pointer}.flatpickr-weekdays{background:transparent;text-align:center;overflow:hidden;width:100%;display:flex;align-items:center;height:28px}.flatpickr-weekdaycontainer{display:flex;flex:1}.span.flatpickr-weekday{cursor:default;font-size:90%;color:var(--tg-hint);line-height:1;margin:0;text-align:center;display:block;flex:1;font-weight:bolder}.flatpickr-day{background:none;border:1px solid transparent;border-radius:150px;box-sizing:border-box;color:var(--tg-text);cursor:pointer;font-weight:400;width:39px;height:39px;line-height:39px;margin:0;display:inline-block;position:relative;justify-content:center;text-align:center}.flatpickr-day.inRange,.flatpickr-day.prevMonthDay.inRange,.flatpickr-day.nextMonthDay.inRange,.flatpickr-day.today.inRange,.flatpickr-day.prevMonthDay.today.inRange,.flatpickr-day.nextMonthDay.today.inRange,.flatpickr-day:hover,.flatpickr-day.prevMonthDay:hover,.flatpickr-day.nextMonthDay:hover,.flatpickr-day:focus,.flatpickr-day.prevMonthDay:focus,.flatpickr-day.nextMonthDay:focus{cursor:pointer;outline:0;background:var(--flatpickr-bg);border-color:var(--flatpickr-bg)}.flatpickr-day.today{border-color:var(--tg-button);color:var(--tg-button)}.flatpickr-day.today:hover,.flatpickr-day.today:focus{border-color:var(--tg-button);background:var(--tg-button);color:#fff}.flatpickr-day.selected,.flatpickr-day.startRange,.flatpickr-day.endRange,.flatpickr-day.selected.inRange,.flatpickr-day.startRange.inRange,.flatpickr-day.endRange.inRange,.flatpickr-day.selected:focus,.flatpickr-day.startRange:focus,.flatpickr-day.endRange:focus,.flatpickr-day.selected:hover,.flatpickr-day.startRange:hover,.flatpickr-day.endRange:hover,.flatpickr-day.selected.prevMonthDay,.flatpickr-day.startRange.prevMonthDay,.flatpickr-day.endRange.prevMonthDay,.flatpickr-day.selected.nextMonthDay,.flatpickr-day.startRange.nextMonthDay,.flatpickr-day.endRange.nextMonthDay{background:var(--tg-button);box-shadow:none;color:#fff;border-color:var(--tg-button)}.flatpickr-day.selected.startRange,.flatpickr-day.startRange.startRange,.flatpickr-day.endRange.startRange{border-radius:50px 0 0 50px}.flatpickr-day.selected.endRange,.flatpickr-day.startRange.endRange,.flatpickr-day.endRange.endRange{border-radius:0 50px 50px 0}.flatpickr-day.selected.startRange+.endRange:not(:nth-child(7n+1)),.flatpickr-day.startRange.startRange+.endRange:not(:nth-child(7n+1)),.flatpickr-day.endRange.startRange+.endRange:not(:nth-child(7n+1)){box-shadow:-10px 0 0 var(--tg-button)}.flatpickr-day.selected.startRange.endRange,.flatpickr-day.startRange.startRange.endRange,.flatpickr-day.endRange.startRange.endRange{border-radius:50px}.flatpickr-day.inRange{border-radius:0;box-shadow:-5px 0 0 var(--flatpickr-bg),5px 0 0 var(--flatpickr-bg)}.flatpickr-day.flatpickr-disabled,.flatpickr-day.flatpickr-disabled:hover,.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay,.flatpickr-day.notAllowed,.flatpickr-day.notAllowed.prevMonthDay,.flatpickr-day.notAllowed.nextMonthDay{color:var(--tg-hint);background:transparent;border-color:transparent;cursor:not-allowed}.flatpickr-day.flatpickr-disabled,.flatpickr-day.flatpickr-disabled:hover{cursor:not-allowed;color:var(--tg-hint)}.flatpickr-day.week.selected{border-radius:0;box-shadow:-5px 0 0 #569ff7,5px 0 0 #569ff7}.flatpickr-day.hidden{visibility:hidden}.flatpickr-rangeMode .flatpickr-day{margin-top:1px}.flatpickr-weekwrapper{display:inline-block;float:left}.flatpickr-weekwrapper .flatpickr-weeks{padding:0 12px;box-shadow:1px 0 0 var(--flatpickr-bg)}.flatpickr-weekwrapper .flatpickr-weekday{float:none;width:100%;line-height:28px}.flatpickr-weekwrapper span.flatpickr-day,.flatpickr-weekwrapper span.flatpickr-day:hover{display:block;width:100%;max-width:39px;margin:0;text-align:center;line-height:38px;cursor:pointer;color:var(--tg-text);background:transparent;border:0}.flatpickr-innerContainer{display:block;display:flex;box-sizing:border-box;overflow:hidden}.flatpickr-rContainer{display:inline-block;padding:0;box-sizing:border-box}.flatpickr-time{text-align:center;outline:0;display:block;height:0;line-height:40px;max-height:40px;box-sizing:border-box;width:100%;display:flex}.flatpickr-time:after{content:"";display:table;clear:both}.flatpickr-time .numInputWrapper{flex:1;width:40%;height:40px;float:left}.flatpickr-time .numInputWrapper span.arrowUp:after{content:"▲"}.flatpickr-time .numInputWrapper span.arrowDown:after{content:"▼"}.flatpickr-time.has-seconds .numInputWrapper{width:26%}.flatpickr-time.time24hr .numInputWrapper{width:49%}.flatpickr-time input{background:transparent;box-shadow:none;border:0;border-radius:0;text-align:center;margin:0;padding:0;height:inherit;line-height:inherit;color:var(--tg-text);font-size:14px;position:relative;box-sizing:border-box;-webkit-appearance:textfield;-moz-appearance:textfield;appearance:textfield}.flatpickr-time input.flatpickr-hour{font-weight:700}.flatpickr-time input.flatpickr-minute,.flatpickr-time input.flatpickr-second{font-weight:400}.flatpickr-time input:focus{outline:0;border:0}.flatpickr-time .flatpickr-time-separator,.flatpickr-time .flatpickr-am-pm{height:inherit;display:inline-block;float:left;line-height:inherit;color:var(--tg-text);font-weight:700;width:2%;user-select:none;align-self:center}.flatpickr-time .flatpickr-am-pm{outline:0;width:18%;cursor:pointer;text-align:center;font-weight:400}.flatpickr-time input:hover,.flatpickr-time .flatpickr-am-pm:hover,.flatpickr-time input:focus,.flatpickr-time .flatpickr-am-pm:focus{background:var(--flatpickr-bg)}.flatpickr-input[readonly]{cursor:pointer}
     </style>
 </head>
 <body>
 
-    <div id="calendar-container"></div>
+    <div id="calendar-container">
+        <!-- Календарь будет встроен сюда -->
+        <input type="text" id="flatpickr-input" style="display:none;">
+    </div>
     <div class="info-panel" id="info-panel">Загрузка...</div>
     <button id="confirm-button" disabled>Подтвердить</button>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- ИСПРАВЛЕНИЕ: Мы обернули весь наш код в функцию runApp() -->
+    <!-- Встроенная библиотека flatpickr -->
     <script>
-        function runApp() {
-            try {
-                const tg = window.Telegram.WebApp;
-                const confirmButton = document.getElementById('confirm-button');
-                const infoPanel = document.getElementById('info-panel');
-
-                tg.ready();
-                tg.expand();
-                
-                // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
-                const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app"; 
-                const urlParams = new URLSearchParams(window.location.search);
-                const propertyId = urlParams.get('property_id');
-
-                if (!propertyId) {
-                    infoPanel.textContent = "Ошибка: не найден ID объекта.";
-                } else {
-                    const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
-                    fetch(fetchUrl, {
-                        headers: { 'ngrok-skip-browser-warning': 'true' }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        return response.json();
-                    })
-                    .then(disabledDates => {
-                        infoPanel.textContent = "Выберите дату заезда";
-                        initializeCalendar(disabledDates);
-                    })
-                    .catch(error => {
-                        console.error('Fetch Error:', error);
-                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
-                    });
-                }
-
-                function initializeCalendar(disabledDates) {
-                    const options = {
-                        type: 'multiple',
-                        settings: {
-                            range: { 
-                                disablePast: true,
-                                disabled: disabledDates 
-                            },
-                            selection: { 
-                                day: 'multiple-ranged',
-                            },
-                            visibility: { 
-                                theme: tg.colorScheme === 'dark' ? 'dark' : 'light',
-                                controls: true 
-                            },
-                        },
-                        actions: {
-                            clickDay(event, self) {
-                                updateSelection(self.selectedDates);
-                            }
-                        }
-                    };
-                    const calendar = new VanillaCalendar('#calendar-container', options);
-                    calendar.init();
-                }
-
-                let checkinDate = null;
-                let checkoutDate = null;
-
-                function updateSelection(selectedDates) {
-                     if (selectedDates.length >= 2) {
-                        const sortedDates = selectedDates.sort((a, b) => new Date(a) - new Date(b));
-                        checkinDate = sortedDates[0];
-                        checkoutDate = sortedDates[sortedDates.length - 1];
-                        infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
-                        confirmButton.disabled = false;
-                    } else if (selectedDates.length === 1) {
-                        checkinDate = sortedDates[0];
-                        checkoutDate = null;
-                        infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
-                        confirmButton.disabled = true;
-                    } else {
-                        checkinDate = null;
-                        checkoutDate = null;
-                        infoPanel.textContent = 'Выберите дату заезда';
-                        confirmButton.disabled = true;
-                    }
-                }
-                
-                function formatDate(dateString) {
-                    const d = new Date(dateString);
-                    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-                }
-
-                confirmButton.addEventListener('click', function () {
-                    if (checkinDate && checkoutDate) {
-                        const dataToSend = {
-                            property_id: propertyId,
-                            checkin_date: checkinDate,
-                            checkout_date: checkoutDate
-                        };
-                        tg.sendData(JSON.stringify(dataToSend));
-                        tg.close();
-                    }
-                });
-            } catch (e) {
-                document.getElementById('info-panel').textContent = `Критическая ошибка: ${e.message}`;
-            }
-        }
+    !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?module.exports=t():"function"==typeof define&&define.amd?define(t):(e="undefined"!=typeof globalThis?globalThis:e||self).flatpickr=t()}(this,function(){"use strict";var e=function(){return(e=Object.assign||function(e){for(var t,n=1,a=arguments.length;n<a;n++)for(var i in t=arguments[n])Object.prototype.hasOwnProperty.call(t,i)&&(e[i]=t[i]);return e}).apply(this,arguments)},t=function(e,t){var n={};for(var a in e)Object.prototype.hasOwnProperty.call(e,a)&&t.indexOf(a)<0&&(n[a]=e[a]);if(null!=e&&"function"==typeof Object.getOwnPropertySymbols){var i=0;for(a=Object.getOwnPropertySymbols(e);i<a.length;i++)t.indexOf(a[i])<0&&Object.prototype.propertyIsEnumerable.call(e,a[i])&&(n[a[i]]=e[a[i]])}return n};const n=["months","weekdays","weekAbbr","am","pm"],a=e=>e.months[e.month]||"";var i=(e,t,a)=>{if(e instanceof Date)return a.formatDate(e,t,a.locale);for(var r=e.split(a.delimiters.main),s=a.parseDate(r[0],t,a.locale),o=r[1];o;){var l=o.split(a.delimiters.time),d=l[0].split(a.delimiters.time_hours),c=d[0],u=d[1];u&&(s.setHours(c,u,0,0),o=l[1])}},r={weekdays:{shorthand:"вс_пн_вт_ср_чт_пт_сб".split("_"),longhand:"Воскресенье_Понедельник_Вторник_Среда_Четверг_Пятница_Суббота".split("_")},months:{shorthand:"Янв_Фев_Март_Апр_Май_Июнь_Июль_Авг_Сен_Окт_Ноя_Дек".split("_"),longhand:"Январь_Февраль_Март_Апрель_Май_Июнь_Июль_Август_Сентябрь_Октябрь_Ноябрь_Декабрь".split("_")},firstDayOfWeek:1,ordinal:function(){return""},rangeSeparator:" — ",weekAbbr:"Нед.",scrollTitle:"Прокрутите для увеличения",toggleTitle:"Нажмите для переключения",amPM:["ДП","ПП"],yearAriaLabel:"Год",time_24hr:!0};return function(s,o){var l=s.calendars.map(c=>c.calendarContainer),d=Array.prototype.slice.call(l).indexOf(s.calendarContainer),u=e=>s.config.noCalendar||0===d||e.target.className.indexOf("flatpickr-month")>-1,p="function"==typeof s.config.errorHandler?s.config.errorHandler:s.defaultErrorHandler;function m(e){return e.bind(s)}function f(){const e=s.config;s.config.noCalendar=!e.inline&&!e.wrap,s.config.allowInput&&s.config.noCalendar&&(e.allowInput=!1),e.time_24hr&&!e.enableSeconds&&(e.time_24hr=!1);var t=s.parseDate(e.defaultDate||"",e.dateFormat,e.locale),n=e.minDate,a=e.maxDate;n&&(s.minDateHasTime=n.getHours()>0||n.getMinutes()>0||n.getSeconds()>0),a&&(s.maxDateHasTime=a.getHours()>0||a.getMinutes()>0||a.getSeconds()>0),e.enableTime&&e.noCalendar&&e.enableTime&&!t&&(t=new Date),Object.assign(s.config,e),t&&(s.selectedDates[0]=t),s.config.mode="range"&&(s.selectedDates[1]=s.parseDate(e.defaultDate[1],e.dateFormat,e.locale))}function g(){var e=s.config.mode;s.isMobile&&!e&&s.config.disableMobile&&"single"===e&&(e=void 0),s.isMobile?s._createElement("div","flatpickr-calendar animate"):s._createElement("div","flatpickr-calendar"),s.calendarContainer.tabIndex=-1,f(),s.config.appendTo&&s.config.appendTo.appendChild(s.calendarContainer),s.config.inline&&!s.config.appendTo&&s.element.parentNode.insertBefore(s.calendarContainer,s.element.nextSibling),s.config.static&&s.calendarContainer.classList.add("static"),s.config.noCalendar||(s.monthNav=s._createElement("div","flatpickr-month"),s.prevMonthNav=s._createElement("span","flatpickr-prev-month",s.l10n.prevMonthNav),s.currentMonth=s._createElement("span","cur-month",s.l10n.months.shorthand[s.currentMonth]),s.currentYearElement=s._createElement("input","cur-year",{type:"number",tabindex:"-1","aria-label":s.l10n.yearAriaLabel,maxlength:"4"}),s.nextMonthNav=s._createElement("span","flatpickr-next-month",s.l10n.nextMonthNav),s.monthNav.appendChild(s.prevMonthNav),s.monthNav.appendChild(s.currentMonth),s.monthNav.appendChild(s.currentYearElement),s.monthNav.appendChild(s.nextMonthNav),s.weekdays=s._createElement("div","flatpickr-weekdays",s.l10n.weekdays.shorthand.join("<span>")),s.rContainer=s._createElement("div","flatpickr-rContainer"),s.calendarContainer.appendChild(s.monthNav),s.calendarContainer.appendChild(s.weekdays),s.rContainer.appendChild(s.days),s.calendarContainer.appendChild(s.rContainer),S()),s.config.enableTime&&function(){s.timeContainer=s._createElement("div","flatpickr-time"),s.timeContainer.tabIndex=-1;var e=s._createElement("span","flatpickr-time-separator",":"),t=s._createElement("input","flatpickr-hour",{type:"number",tabindex:"-1","aria-label":s.l10n.hourAriaLabel,maxlength:"2",value:s.selectedDates[0]?s.selectedDates[0].getHours():12}),n=s._createElement("input","flatpickr-minute",{type:"number",tabindex:"-1","aria-label":s.l10n.minuteAriaLabel,maxlength:"2",value:s.selectedDates[0]?s.selectedDates[0].getMinutes():0}),a=s._createElement("input","flatpickr-second",{type:"number",tabindex:"-1","aria-label":s.l10n.secondAriaLabel,maxlength:"2",value:s.selectedDates[0]?s.selectedDates[0].getSeconds():0});s.amPM=s._createElement("span","flatpickr-am-pm",{tabindex:"-1",title:s.l10n.toggleTitle},s.l10n.amPM[s.selectedDates[0]&&s.selectedDates[0].getHours()<12?0:1]),s.timeContainer.appendChild(t),s.timeContainer.appendChild(e),s.timeContainer.appendChild(n),s.config.enableSeconds&&s.timeContainer.appendChild(s._createElement("span","flatpickr-time-separator",":")),s.config.enableSeconds&&s.timeContainer.appendChild(a),s.config.time_24hr||s.timeContainer.appendChild(s.amPM),s.calendarContainer.appendChild(s.timeContainer)}(),s.config.wrap&&s.element.querySelector("[data-input]").addEventListener("click",m(E)),s.config.clickOpens&&!s.config.noCalendar&&s.element.addEventListener("focus",m(E)),s.config.allowInput||s.element.setAttribute("readonly","readonly"),k(),x()}_=s;var h,y,v,b=o,S=()=>(s.days=s._createElement("div","flatpickr-days",void 0,s.calendarContainer),void(s.days.tabIndex=-1));function w(){var e=s.config.mode;if("range"===e){const e=s.selectedDates;e.length<2&&(s.selectedDates=[],s.config.defaultDate&&e.push(s.parseDate(s.config.defaultDate[0],s.dateFormat,s.locale))),s.selectedDates.sort((function(e,t){return e.getTime()-t.getTime()}))}else s.selectedDates.sort((function(e,t){return e.getTime()-t.getTime()}))}function C(e){e.preventDefault(),e.stopPropagation(),s.changeMonth(e.target.className.indexOf("next")>-1?1:-1)}function k(){if("range"===s.config.mode&&s.selectedDates.length<2&&s.config.defaultDate&&s.selectedDates.push(s.parseDate(s.config.defaultDate[1],s.dateFormat,s.locale)),w(),s.config.noCalendar)return;const e=s.l10n.weekdays.shorthand.map((e,t)=>s.l10n.firstDayOfWeek-t<0?e:s.l10n.weekdays.shorthand[6-(s.l10n.firstDayOfWeek-t-1)]).join("<span>");s.weekdays.innerHTML=e,s.currentMonth.textContent=a(s),s.currentYearElement.value=s.currentYear;const t=document.createDocumentFragment();let n;for(s.days.innerHTML="";(n=s.days.lastChild)&&s.days.removeChild(n););let i=s.currentYear,r=s.currentMonth,o=(new Date(i,r,1).getDay()-s.l10n.firstDayOfWeek+7)%7,l=new Date(i,r-1,1).getMonth(),d=new Date(i,r-1,1).getFullYear(),c=new Date(i,r+1,1).getMonth(),u=new Date(i,r+1,1).getFullYear(),p=new Date(i,r-1,1).getDate(),m=(new Date(i,r,1).getDay()-s.l10n.firstDayOfWeek+7)%7;for(;m--;)t.appendChild(s._createElement("span","flatpickr-day prevMonthDay",new Date(d,l,p-m+1).getDate()));for(var f=1,g=new Date(i,r+1,0).getDate();f<=g;f++){var h=new Date(i,r,f),y=h.getDay(),v=s.isEnabled(h,h),b=[];v?b.push("flatpickr-day"):b.push("flatpickr-day flatpickr-disabled"),s.config.mode==="range"&&(s.selectedDates.length>0&&s.selectedDates.length<2?v&&s.selectedDates[0].getTime()<h.getTime()?b.push("inRange"):s.selectedDates[0].getTime()>h.getTime()&&b.push("notAllowed"):s.selectedDates.length>1&&(s.selectedDates[0].getTime()<h.getTime()&&s.selectedDates[1].getTime()>h.getTime()?b.push("inRange"):h.getTime()<s.selectedDates[0].getTime()&&b.push("notAllowed"))),s.isSelected(h)&&b.push("selected"),!s.config.noCalendar&&s.config.mode==="range"&&1===s.selectedDates.length&&h.getTime()===s.selectedDates[0].getTime()&&b.push("startRange"),s.config.noCalendar||!v||s.config.mode==="range"&&s.selectedDates.length>1&&s.isSelected(h)&&(b.push(h.getTime()===s.selectedDates[0].getTime()?"startRange":"endRange"),h.getTime()>s.selectedDates[0].getTime()&&h.getTime()<s.selectedDates[1].getTime()&&b.push("inRange")),s.config.noCalendar||h.getTime()===s.now.getTime()&&b.push("today"),s.config.noCalendar||!v||s.config.weekNumbers&&0===y&&b.push("week"),t.appendChild(s._createElement("span",b.join(" "),h.getDate()))}for(m=new Date(i,r,g).getDay();m<6;m++)t.appendChild(s._createElement("span","flatpickr-day nextMonthDay",new Date(u,c,m-g+1).getDate()));s.days.appendChild(t)}function D(){s.prevMonthNav.addEventListener("click",C),s.nextMonthNav.addEventListener("click",C),s.calendarContainer.addEventListener("mousedown",m(L)),s.calendarContainer.addEventListener("keydown",A),s.days.addEventListener("click",T)}function E(e){s.isOpen||s.isMobile&&s.config.disableMobile||(s.calendarContainer.classList.add("open"),s.config.noCalendar||(s.calendarContainer.style.visibility="visible",s.calendarContainer.style.opacity=1,s.calendarContainer.focus()),s.config.wrap&&s.element.querySelector("[data-input]").focus(),s.isOpen=!0,s.triggerEvent("onOpen"))}function L(e){const t=e.target,n=t.className.indexOf("flatpickr-day")>-1,a=t.className.indexOf("flatpickr-month")>-1,i=t.className.indexOf("cur-year")>-1;if(u(e))return;if(n){if(s.config.noCalendar)return;const e=t,n=s.isEnabled(new Date(parseInt(e.textContent,10),s.currentMonth,1)),a=s.isSelected(new Date(parseInt(e.textContent,10),s.currentMonth,1));n&&!a&&s.selectDate(new Date(parseInt(e.textContent,10),s.currentMonth,1)),s.config.mode==="range"&&s.selectedDates.length>1&&s.close()}else a?s.currentYearElement.focus():i&&s.currentYearElement.select()}function T(e){var t=e.target;t.className.indexOf("flatpickr-day")>-1&&!s.config.noCalendar&&s.selectDate(new Date(parseInt(t.textContent,10),s.currentMonth,1))}function x(){"range"===s.config.mode&&s.selectedDates.length<2&&s.config.defaultDate&&s.selectedDates.push(s.parseDate(s.config.defaultDate[1],s.dateFormat,s.locale)),w();for(var e=s.selectedDates.map(e=>s.formatDate(e,s.config.dateFormat,s.l10n)),t="",n=0;n<e.length;n++)t+=e[n],n<e.length-1&&(t+=s.config.mode==="range"?s.l10n.rangeSeparator:s.config.conjunction);s.input.value=t,s._input.value=t,s.config.wrap&&s.element.querySelector("[data-input]").value=t,s.triggerEvent("onChange")}function O(e,t){var n=new Date(e,t,1);return new Date(n.getFullYear(),n.getMonth()+1,0).getDate()}function N(e){return n[e.getMonth()]||""}function P(e){return(new Date(e.getFullYear(),e.getMonth(),1).getDay()-s.l10n.firstDayOfWeek+7)%7}function R(){s.config.noCalendar||(s.prevMonthNav.style.display=s.currentMonth-1<0&&s.currentYear-1<s.minDate.getFullYear()?"none":"block",s.nextMonthNav.style.display=s.currentMonth+1>11&&s.currentYear+1>s.maxDate.getFullYear()?"none":"block")}function F(e){var t=s.parseDate(e,"Y-m-d"),n=new Date(t.getFullYear(),t.getMonth(),t.getDate());return s.isEnabled(n)}function M(e){for(var t=s.parseDate(e,"Y-m-d"),n=new Date(t.getFullYear(),t.getMonth(),t.getDate()),a=s.selectedDates.length-1;a>=0;a--)if(s.selectedDates[a].getTime()===n.getTime())return s.selectedDates.splice(a,1)}function q(e,t,n){var a=s.parseDate(e,s.config.dateFormat,s.l10n.locale);a instanceof Date&&(s.config.mode==="range"&&s.selectedDates.length>1&&(s.selectedDates[0].getTime()>a.getTime()?s.selectedDates[0]=a:s.selectedDates[1]=a),s.selectDate(a,t,n),x())}function V(){s.isOpen&&!s.isMobile&&s.close()}function B(e){return(s.isOpen||s.isMobile)&&e.target!==s.element&&!s.element.contains(e.target)&&!s.calendarContainer.contains(e.target)&&!s.config.inline&&V()}function U(e){var t=e.key;switch(t){case"Enter":s.isOpen?s.selectDate(s.selectedDates[0]):E();break;case"Escape":s.isOpen&&V();break;case"ArrowLeft":case"ArrowRight":s.isOpen&&(s.changeMonth("ArrowRight"===t?1:-1),k());break;case"ArrowUp":case"ArrowDown":s.isOpen&&(s.changeYear("ArrowDown"===t?1:-1),k())}}function W(e,t){return s.formatDate(e,t)}function j(e,t,n){s.config.mode=e,s.config.dateFormat=t||"Y-m-d",n&&(s.config.defaultDate=n),s.clear(),f(),s.redraw()}function H(){var e=s.selectedDates.map(function(e){return s.formatDate(e,"Y-m-d")});return e.length?e:"range"!==s.config.mode?null:[]}function z(){s.input.value="",s._input.value="",s.selectedDates=[],w(),s.redraw(),s.triggerEvent("onChange")}function G(){for(var e=s.config.mode,t=s.selectedDates,n=t.map(function(e){return s.formatDate(e,s.config.dateFormat)}),a=0;a<t.length;a++){var i=t[a];if(s.isEnabled(i))continue;var r=s.config.minDate,o=s.config.maxDate;if(r&&i<r||o&&i>o)return!1;if(!s.config.inline&&!s.config.appendTo&&s.element.value===(e?n.join(s.l10n.rangeSeparator):n.join(s.config.conjunction)))continue;var l=s.parseDate(s.element.value,s.config.dateFormat,s.l10n.locale);s.selectDate(l)}}return{calendars:[],element:s,config:o,l10n:r,destroy:function(){var e=this;e.calendars.forEach(function(e){e.destroy()}),e.config=void 0,e.l10n=void 0,e.element=void 0,e=void 0},parseDate:i,formatDate:a,changeMonth:function(e,t){var n=this;n.config.noCalendar||(n.currentMonth+=e,n.currentMonth<0?(n.currentMonth=11,n.currentYear--):n.currentMonth>11&&(n.currentMonth=0,n.currentYear++),n.redraw(t))},clear:z,close:V,redraw:function(e){var t=this;t.config.noCalendar||(t.calendarContainer.innerHTML="",t.config.appendTo&&t.config.appendTo.removeChild(t.calendarContainer),t.config.inline&&!t.config.appendTo&&t.element.parentNode.removeChild(t.calendarContainer),t.config.wrap&&t.element.querySelector("[data-input]").removeEventListener("click",m(E)),t.config.clickOpens&&!t.config.noCalendar&&t.element.removeEventListener("focus",m(E)),g.call(t),t.config.wrap&&t.element.querySelector("[data-input]").addEventListener("click",m(E)),t.config.clickOpens&&!t.config.noCalendar&&t.element.addEventListener("focus",m(E)),e&&t.selectDate(t.selectedDates[0],!1,!0))},set:j,setDate:q,toggle:function(){var e=this;e.isOpen?e.close():e.open()},open:E,isEnabled:function(e,t){var n=this;if(n.config.minDate&&e<n.config.minDate||n.config.maxDate&&e>n.config.maxDate)return!1;if(t&&n.config.mode==="range"&&n.selectedDates.length>1&&n.selectedDates[0].getTime()>e.getTime()&&e.getTime()>n.selectedDates[1].getTime())return!1;if(n.config.enable.length>0){var a=n.config.enable.filter(function(t){return t instanceof Date?t.getTime()===e.getTime():"function"==typeof t?t(e):!1});return a.length>0}return n.config.disable.filter(function(t){return t instanceof Date?t.getTime()===e.getTime():"function"==typeof t?t(e):!1}).length<1},isSelected:function(e){var t=this;return t.selectedDates.filter(function(n){return n.getTime()===e.getTime()}).length>0},selectDate:function(e,t,n){var a=this;if(a.config.noCalendar)return;var i=a.formatDate(e,a.config.dateFormat);if(a.config.mode==="range"&&a.selectedDates.length>1&&a.clear(),a.selectedDates.push(e),a.redraw(t),!n&&a.config.closeOnSelect&&a.close(),a.config.mode==="range"&&1===a.selectedDates.length&&a.calendarContainer.classList.add("rangeMode"),a.config.mode!=="range"&&a.selectedDates.length>1){const e=a.config.allowInput?a.element.value.split(a.config.conjunction)[0]:"";a.selectedDates=a.selectedDates.filter(t=>a.formatDate(t,a.config.dateFormat)===e)}a.config.mode==="range"&&a.selectedDates.length>1&&a.calendarContainer.classList.remove("rangeMode"),x(),a.triggerEvent("onValueUpdate")},changeYear:function(e,t){var n=this;n.currentYear+=e,n.redraw(t)},formatDate:W,getYear:function(){return this.currentYear},getMonth:function(){return this.currentMonth},getDay:function(){return this.selectedDates[0]?this.selectedDates[0].getDate():null},getHours:function(){return this.selectedDates[0]?this.selectedDates[0].getHours():null},getMinutes:function(){return this.selectedDates[0]?this.selectedDates[0].getMinutes():null},getSeconds:function(){return this.selectedDates[0]?this.selectedDates[0].getSeconds():null},getDate:H,destroy:function(){var e=this;e.config.noCalendar||(e.calendarContainer.parentNode.removeChild(e.calendarContainer),e.element.removeEventListener("focus",m(E)),e.element.removeEventListener("click",m(E))),e.config.wrap&&e.element.querySelector("[data-input]").removeEventListener("click",m(E)),e.config.allowInput&&e.element.removeAttribute("readonly"),e.input.parentNode.removeChild(e.input),e=void 0}}},s.init()}o.init.prototype=o.prototype;var h={};o.l10ns.default=e({},r);const y=o.l10ns;return o.localize=e=>{o.l10ns.default=e},o.setDefaults=t=>{for(var n in t)o.l10ns.default[n]=t[n]},o.initAll=()=>{for(var e=document.querySelectorAll("[data-enable-time], .flatpickr"),t=0;t<e.length;t++)new o(e[t])},o.init=o,window&&window.flatpickr&&(window.flatpickr.initAll(),window.flatpickr.setDefaults(o.l10ns.default)),"undefined"!=typeof module&&module.exports&&(module.exports=o),o});
     </script>
     
-    <!-- ИСПРАВЛЕНИЕ: Загружаем библиотеку календаря и ПОСЛЕ ЕЕ ЗАГРУЗКИ вызываем наш код -->
-    <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js" onload="runApp()"></script>
+    <script>
+        try {
+            const tg = window.Telegram.WebApp;
+            const confirmButton = document.getElementById('confirm-button');
+            const infoPanel = document.getElementById('info-panel');
+
+            tg.ready();
+            tg.expand();
+            
+            // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
+            const API_BASE_URL = "https://97d6-162-19-62-155.ngrok-free.app"; 
+            const urlParams = new URLSearchParams(window.location.search);
+            const propertyId = urlParams.get('property_id');
+
+            if (!propertyId) {
+                infoPanel.textContent = "Ошибка: не найден ID объекта.";
+            } else {
+                const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
+                fetch(fetchUrl, {
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    return response.json();
+                })
+                .then(disabledDates => {
+                    infoPanel.textContent = "Выберите дату заезда";
+                    initializeCalendar(disabledDates);
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
+                });
+            }
+
+            let checkinDate = null;
+            let checkoutDate = null;
+            
+            function initializeCalendar(disabledDates) {
+                flatpickr("#flatpickr-input", {
+                    inline: true, // Встраиваем календарь прямо в #calendar-container
+                    appendTo: document.getElementById("calendar-container"),
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    disable: disabledDates,
+                    minDate: "today",
+                    locale: "ru",
+                    onChange: function(selectedDates, dateStr, instance) {
+                        if (selectedDates.length === 2) {
+                            checkinDate = selectedDates[0];
+                            checkoutDate = selectedDates[1];
+                            infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
+                            confirmButton.disabled = false;
+                        } else {
+                            confirmButton.disabled = true;
+                        }
+                    }
+                });
+            }
+            
+            function formatDate(dateObj) {
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                return `${day}.${month}`;
+            }
+
+            confirmButton.addEventListener('click', function () {
+                if (checkinDate && checkoutDate) {
+                    const dataToSend = {
+                        property_id: propertyId,
+                        checkin_date: checkinDate.toISOString().split('T')[0], // Формат YYYY-MM-DD
+                        checkout_date: checkoutDate.toISOString().split('T')[0] // Формат YYYY-MM-DD
+                    };
+                    tg.sendData(JSON.stringify(dataToSend));
+                    tg.close();
+                }
+            });
+        } catch (e) {
+            document.getElementById('info-panel').textContent = `Критическая ошибка: ${e.message}`;
+        }
+    </script>
 </body>
 </html>
