@@ -72,13 +72,14 @@
     
     <div id="debug-panel"><strong>Техническая информация:</strong></div>
 
-    <!-- Сначала загружаем все библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
     
-    <!-- И ТОЛЬКО ПОТОМ выполняем наш собственный код -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        // --- НОВАЯ, БОЛЕЕ НАДЕЖНАЯ ЛОГИКА ЗАПУСКА ---
+
+        // Эта функция запустит наше приложение
+        function runApp() {
             const tg = window.Telegram.WebApp;
             const confirmButton = document.getElementById('confirm-button');
             const infoPanel = document.getElementById('info-panel');
@@ -133,6 +134,7 @@
             });
 
             function initializeCalendar(disabledDates) {
+                // Теперь мы уверены, что VanillaCalendar существует
                 const options = {
                     type: 'multiple',
                     settings: {
@@ -193,8 +195,22 @@
                     tg.close();
                 }
             });
-        });
+        }
+
+        // Эта "сторожевая" функция будет ждать загрузки библиотеки
+        function waitForLibrary() {
+            if (typeof VanillaCalendar !== 'undefined') {
+                // Библиотека загружена! Запускаем наше приложение.
+                runApp();
+            } else {
+                // Библиотеки еще нет. Проверяем снова через 100 миллисекунд.
+                setTimeout(waitForLibrary, 100);
+            }
+        }
+
+        // Запускаем нашу "сторожевую" функцию
+        waitForLibrary();
+
     </script>
 </body>
 </html>
-
