@@ -78,30 +78,18 @@
             tg.ready();
             tg.expand();
             
-            // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
-            const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app"; 
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('property_id');
 
             if (!propertyId) {
                 infoPanel.textContent = "Ошибка: не найден ID объекта.";
             } else {
-                const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
-                fetch(fetchUrl, {
-                    headers: { 'ngrok-skip-browser-warning': 'true' }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    return response.json();
-                })
-                .then(disabledDates => {
-                    infoPanel.textContent = "Выберите дату заезда";
-                    initializeCalendar(disabledDates);
-                })
-                .catch(error => {
-                    console.error('Fetch Error:', error);
-                    infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok-туннель.";
-                });
+                // --- ИЗМЕНЕНИЕ: Используем "искусственные" (mock) данные вместо fetch ---
+                // Это позволяет нам отладить календарь без зависимости от ngrok и бэкенда.
+                infoPanel.textContent = "Выберите дату заезда";
+                // Представим, что с сервера пришли вот такие занятые даты:
+                const mockDisabledDates = ["2025-07-10", "2025-07-11", "2025-07-18", "2025-08-01"];
+                initializeCalendar(mockDisabledDates);
             }
 
             function initializeCalendar(disabledDates) {
@@ -144,7 +132,7 @@
                     infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}, Выезд: ${formatDate(checkoutDate)}`;
                     confirmButton.disabled = false;
                 } else if (selectedDates.length === 1) {
-                    checkinDate = selectedDates[0];
+                    checkinDate = sortedDates[0];
                     checkoutDate = null;
                     infoPanel.textContent = `Заезд: ${formatDate(checkinDate)}. Выберите дату выезда.`;
                     confirmButton.disabled = true;
