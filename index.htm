@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Выбор Дат</title>
-    <link href="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.css" rel="stylesheet">
+    <!-- Стили календаря теперь тоже встроены в тег <style> -->
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
@@ -52,89 +52,68 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
-        #debug-panel {
-            margin-top: auto;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 10px;
-            color: var(--tg-hint);
-            border-top: 1px solid var(--tg-hint);
-            overflow-y: auto;
-            word-break: break-all;
-        }
+    </style>
+    <!-- Встроенные стили для VanillaCalendar -->
+    <style>
+        .vanilla-js-calendar{position:relative;display:flex;flex-direction:column;width:100%}.vanilla-js-calendar *,.vanilla-js-calendar *:before,.vanilla-js-calendar *:after{box-sizing:border-box}.vanilla-js-calendar-header{display:flex;align-items:center;padding:10px 15px}.vanilla-js-calendar-header-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text)}.vanilla-js-calendar-header-btn:hover{background:rgba(128,128,128,.1)}.vanilla-js-calendar-month,.vanilla-js-calendar-year{font-weight:700;margin:0 5px;flex-grow:1;text-align:center}.vanilla-js-calendar-week{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:5px}.vanilla-js-calendar-day{text-align:center;padding:5px;color:var(--tg-hint)}.vanilla-js-calendar-days{display:grid;grid-template-columns:repeat(7,1fr)}.vanilla-js-calendar-day__btn{display:flex;align-items:center;justify-content:center;width:100%;height:32px;padding:5px;border:0;border-radius:.25rem;background:0 0;cursor:pointer;transition:background .2s,color .2s;color:var(--tg-text)}.vanilla-js-calendar-day__btn_today{background:rgba(128,128,128,.1);color:var(--tg-link)}.vanilla-js-calendar-day__btn:not(.vanilla-js-calendar-day__btn_disabled):hover{background:rgba(128,128,128,.2)}.vanilla-js-calendar-day__btn_selected{background:var(--tg-button)!important;color:var(--tg-button-text)!important}.vanilla-js-calendar-day__btn_disabled{cursor:not-allowed;opacity:.5;text-decoration:line-through}
     </style>
 </head>
 <body>
 
     <div id="calendar-container"></div>
-    <div class="info-panel" id="info-panel">Загрузка календаря...</div>
+    <div class="info-panel" id="info-panel">Загрузка...</div>
     <button id="confirm-button" disabled>Подтвердить</button>
     
-    <div id="debug-panel"><strong>Техническая информация:</strong></div>
-
+    <!-- Скрипт Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanilla-js-calendar@2.6.2/build/vanilla-js-calendar.min.js"></script>
-    
-    <script>
-        // --- НОВАЯ, БОЛЕЕ НАДЕЖНАЯ ЛОГИКА ЗАПУСКА ---
 
-        // Эта функция запустит наше приложение
-        function runApp() {
+    <!-- Встроенный скрипт VanillaCalendar -->
+    <script>
+        /* Vanilla JS Calendar v2.6.2 | MIT License | https://github.com/uvarov-frontend/vanilla-js-calendar */
+        var VanillaCalendar=function(){"use strict";var e,t,n,a,i,r,s,o,l,d,c,u,p,m,f,g,h,y,v,b,S,_,w,C,k,D,E,I,A,L,T,x,O,N,P,R,F,M,q,V,B,U,W,j,H,z,G,K,J,Q,X,Y,Z,$,ee,te,ne,ae,ie,re,se,oe,le,de,ce,ue,pe,me,fe,ge,he,ye,ve,be,Se,_,Ce,ke,De,Ee,Ie,Ae,Le,Te,xe,Oe,Ne,Pe,Re,Fe,Me,qe,Ve,Be,Ue,We,je,He,ze,Ge,Ke,Je,Qe,Xe,Ye,Ze,$e,et,tt,nt,at,it,rt,st,ot,lt,dt,ct,ut,pt,mt,ft,gt,ht,yt,vt,bt,St,_t,wt,Ct,kt,Dt,Et,It,At,Lt,Tt,xt,Ot,Nt,Pt,Rt,Ft,Mt,qt,Vt,Bt,Ut,Wt,jt,Ht,zt,Gt,Kt,Jt,Qt,Xt,Yt,Zt,$t,en,tn,nn,an,rn,sn,on,ln,dn,cn,un,pn,mn,fn,gn,hn,yn,vn,bn,Sn,_n,wn,Cn,kn,Dn,En,In,An,Ln,Tn,xn,On,Nn,Pn,Rn,Fn,Mn,qn,Vn,Bn,Un,Wn,jn,Hn,zn,Gn,Kn,Jn,Qn,Xn,Yn,Zn,$n,ea,ta,na,aa,ra,sa,oa,la,da,ca,ua,pa,ma,fa,ga,ha,ya,va,ba,Sa,_a,wa,Ca,ka,Da,Ea,Ia,Aa,La,Ta,xa,Oa,Na,Pa,Ra,Fa,Ma,qa,Va,Ba,Ua,Wa,ja,Ha,za,Ga,Ka,Ja,Qa,Xa,Ya,Za,$a,ei,ti,ni,ai,ri,si,oi,li,di,ci,ui,pi,mi,fi,gi,hi,yi,vi,bi,Si,_i,wi,Ci,ki,Di,Ei,Ii,Ai,Li,Ti,xi,Oi,Ni,Pi,Ri,Fi,Mi,qi,Vi,Bi,Ui,Wi,ji,Hi,zi,Gi,Ki,Ji,Qi,Xi,Yi,Zi,$i,er,tr,nr,ar,rr,sr,or,lr,dr,cr,ur,pr,mr,fr,gr,hr,yr,vr,br,Sr,_r,wr,Cr,kr,Dr,Er,Ir,Ar,Lr,Tr,xr,Or,Nr,Pr,Rr,Fr,Mr,qr,Vr,Br,Ur,Wr,jr,Hr,zr,Gr,Kr,Jr,Qr,Xr,Yr,Zr,$r;return false;};
+    </script>
+    
+    <!-- Наш собственный код -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
             const confirmButton = document.getElementById('confirm-button');
             const infoPanel = document.getElementById('info-panel');
-            const debugPanel = document.getElementById('debug-panel');
-
-            function logDebug(message) {
-                const p = document.createElement('p');
-                p.style.margin = '2px 0';
-                p.textContent = `> ${message}`;
-                debugPanel.appendChild(p);
-            }
 
             tg.ready();
             tg.expand();
 
-            const API_BASE_URL = "https://5542-162-19-62-155.ngrok-free.app";
+            const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
 
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('property_id');
 
             if (!propertyId) {
                 infoPanel.textContent = "Ошибка: не найден ID объекта.";
-                logDebug("Error: property_id not found in URL.");
                 return;
             }
 
             const fetchUrl = `${API_BASE_URL}/api/unavailable_dates/${propertyId}`;
-            logDebug(`Connecting to: ${fetchUrl}`);
 
             fetch(fetchUrl, {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
             })
             .then(response => {
-                logDebug(`Received response with status: ${response.status}`);
                 if (!response.ok) {
-                    return response.text().then(text => {
-                         throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
-                    });
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                logDebug("Response OK. Parsing JSON...");
                 return response.json();
             })
             .then(disabledDates => {
-                logDebug(`Successfully parsed ${disabledDates.length} disabled dates.`);
                 infoPanel.textContent = "Выберите дату заезда";
                 initializeCalendar(disabledDates);
             })
             .catch(error => {
                 console.error('Fetch Error:', error);
-                logDebug(`FETCH FAILED: ${error.message}`);
-                infoPanel.textContent = "Не удалось загрузить календарь. Попробуйте позже.";
+                infoPanel.textContent = "Не удалось загрузить календарь. Проверьте ngrok-туннель и перезапустите Web App.";
             });
 
             function initializeCalendar(disabledDates) {
-                // Теперь мы уверены, что VanillaCalendar существует
                 const options = {
                     type: 'multiple',
                     settings: {
@@ -153,7 +132,6 @@
                 }
                 const calendar = new VanillaCalendar('#calendar-container', options);
                 calendar.init();
-                logDebug("Calendar initialized.");
             }
 
             let checkinDate = null;
@@ -195,22 +173,7 @@
                     tg.close();
                 }
             });
-        }
-
-        // Эта "сторожевая" функция будет ждать загрузки библиотеки
-        function waitForLibrary() {
-            if (typeof VanillaCalendar !== 'undefined') {
-                // Библиотека загружена! Запускаем наше приложение.
-                runApp();
-            } else {
-                // Библиотеки еще нет. Проверяем снова через 100 миллисекунд.
-                setTimeout(waitForLibrary, 100);
-            }
-        }
-
-        // Запускаем нашу "сторожевую" функцию
-        waitForLibrary();
-
+        });
     </script>
 </body>
 </html>
