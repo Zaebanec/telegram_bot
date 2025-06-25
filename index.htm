@@ -19,34 +19,16 @@
             color: var(--tg-text);
             margin: 0;
             padding: 15px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden;
+            /* Разрешаем скроллинг для всего тела страницы */
         }
-        .calendar-wrapper {
-            width: 100%;
-            max-width: 380px;
-            margin: 0 auto;
-            background-color: var(--tg-bg);
-            border-radius: 12px;
-            padding: 10px;
-            box-sizing: border-box;
+        .calendar-month-container {
+            margin-bottom: 25px;
         }
         .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: center;
             padding: 10px 5px;
-        }
-        .calendar-header button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--tg-text);
         }
         .calendar-month-year {
             font-weight: 600;
@@ -112,13 +94,22 @@
         .calendar-day.padding {
             visibility: hidden;
         }
+        .sticky-footer {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background-color: var(--tg-bg);
+            box-shadow: 0 -5px 15px -5px rgba(0,0,0,0.1);
+        }
         .info-panel {
             text-align: center;
             padding: 12px;
-            margin-top: 15px;
             border-radius: 8px;
             font-size: 14px;
             background-color: var(--tg-secondary-bg);
+            margin-bottom: 15px;
         }
         #confirm-button {
             font-family: inherit;
@@ -126,7 +117,6 @@
             font-size: 16px;
             width: 100%;
             padding: 15px;
-            margin-top: auto; /* Прижимает кнопку к низу */
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -141,17 +131,15 @@
 </head>
 <body>
 
-    <div class="calendar-wrapper">
-        <div class="calendar-header">
-            <button id="prev-month-btn">&lsaquo;</button>
-            <span id="month-year-label"></span>
-            <button id="next-month-btn">&rsaquo;</button>
-        </div>
-        <div class="calendar-grid" id="weekdays-grid"></div>
-        <div class="calendar-grid" id="calendar-grid"></div>
+    <div id="calendar-body">
+        <!-- Сюда будут добавляться месяцы -->
     </div>
-    <div class="info-panel" id="info-panel">Загрузка...</div>
-    <button id="confirm-button" disabled>Подтвердить</button>
+
+    <div class="sticky-footer">
+        <div class="info-panel" id="info-panel">Загрузка...</div>
+        <button id="confirm-button" disabled>Подтвердить</button>
+    </div>
+
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
@@ -160,48 +148,33 @@
             tg.ready();
             tg.expand();
 
-            const monthYearLabel = document.getElementById('month-year-label');
-            const calendarGrid = document.getElementById('calendar-grid');
-            const weekdaysGrid = document.getElementById('weekdays-grid');
+            const calendarBody = document.getElementById('calendar-body');
             const infoPanel = document.getElementById('info-panel');
             const confirmButton = document.getElementById('confirm-button');
-            const prevMonthBtn = document.getElementById('prev-month-btn');
-            const nextMonthBtn = document.getElementById('next-month-btn');
-
+            
             let currentMonth = new Date().getMonth();
             let currentYear = new Date().getFullYear();
-            let calendarData = {}; // { 'YYYY-MM-DD': { status, price } }
+            let calendarData = {}; 
             let checkinDate = null;
             let checkoutDate = null;
+            let isLoading = false; // Флаг для предотвращения множественных загрузок
 
             const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-            function renderWeekdays() {
-                weekdaysGrid.innerHTML = '';
-                dayNames.forEach(day => {
-                    const dayEl = document.createElement('div');
-                    dayEl.className = 'calendar-weekday';
-                    dayEl.textContent = day;
-                    weekdaysGrid.appendChild(dayEl);
-                });
-            }
+            function fetchAndRenderMonth(year, month) {
+                if (isLoading) return;
+                isLoading = true;
 
-            function fetchAndRenderCalendar() {
-                infoPanel.textContent = 'Загрузка данных...';
-                confirmButton.disabled = true;
-
-                // ВАЖНО: Убедитесь, что здесь ваш актуальный ngrok URL
                 const API_BASE_URL = "https://4ec5-162-19-62-155.ngrok-free.app";
                 const urlParams = new URLSearchParams(window.location.search);
                 const propertyId = urlParams.get('property_id');
-
                 if (!propertyId) {
                     infoPanel.textContent = "Ошибка: не найден ID объекта.";
                     return;
                 }
 
-                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${currentYear}&month=${currentMonth + 1}`;
+                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${year}&month=${month + 1}`;
                 
                 fetch(fetchUrl, { headers: { 'ngrok-skip-browser-warning': 'true' } })
                     .then(response => {
@@ -209,27 +182,53 @@
                         return response.json();
                     })
                     .then(data => {
-                        calendarData = {};
                         data.forEach(dayInfo => {
                             calendarData[dayInfo.date] = {
                                 status: dayInfo.status,
                                 price: dayInfo.price
                             };
                         });
+                        renderMonth(year, month);
+                        isLoading = false;
                         updateUI();
                     })
                     .catch(error => {
                         console.error('Fetch Error:', error);
-                        infoPanel.textContent = "Ошибка загрузки данных. Проверьте ngrok.";
+                        infoPanel.textContent = "Ошибка загрузки данных.";
+                        isLoading = false;
                     });
             }
             
-            function renderCalendar() {
-                calendarGrid.innerHTML = '';
-                monthYearLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            function renderMonth(year, month) {
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'calendar-month-container';
+
+                // Заголовок месяца
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                const monthYearLabel = document.createElement('span');
+                monthYearLabel.className = 'calendar-month-year';
+                monthYearLabel.textContent = `${monthNames[month]} ${year}`;
+                header.appendChild(monthYearLabel);
+                monthContainer.appendChild(header);
+
+                // Дни недели
+                const weekdaysGrid = document.createElement('div');
+                weekdaysGrid.className = 'calendar-grid';
+                dayNames.forEach(day => {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-weekday';
+                    dayEl.textContent = day;
+                    weekdaysGrid.appendChild(dayEl);
+                });
+                monthContainer.appendChild(weekdaysGrid);
+
+                // Сетка дат
+                const calendarGrid = document.createElement('div');
+                calendarGrid.className = 'calendar-grid';
                 
-                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const startingDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
 
                 for (let i = 0; i < startingDay; i++) {
@@ -247,7 +246,7 @@
                     dayNumber.textContent = day;
                     dayEl.appendChild(dayNumber);
 
-                    const currentDate = new Date(currentYear, currentMonth, day);
+                    const currentDate = new Date(year, month, day);
                     const currentDateStr = currentDate.toISOString().split('T')[0];
                     const dayData = calendarData[currentDateStr];
 
@@ -279,6 +278,8 @@
                     
                     calendarGrid.appendChild(dayEl);
                 }
+                monthContainer.appendChild(calendarGrid);
+                calendarBody.appendChild(monthContainer);
             }
             
             function onDayClick(event) {
@@ -301,8 +302,25 @@
                 updateUI();
             }
 
+            function updateAllRenderedMonths() {
+                const existingMonths = calendarBody.querySelectorAll('.calendar-month-container');
+                existingMonths.forEach(month => month.remove());
+                
+                // Перерисовываем все загруженные месяцы с обновленными стилями
+                for (const dateStr in calendarData) {
+                    const d = new Date(dateStr);
+                    // Логика, чтобы не рисовать один и тот же месяц дважды
+                    if (document.querySelector(`[data-year='${d.getFullYear()}'][data-month='${d.getMonth()}']`) === null) {
+                         renderMonth(d.getFullYear(), d.getMonth());
+                         const monthDiv = calendarBody.lastChild;
+                         monthDiv.dataset.year = d.getFullYear();
+                         monthDiv.dataset.month = d.getMonth();
+                    }
+                }
+            }
+
             function updateUI() {
-                renderCalendar();
+                updateAllRenderedMonths();
                 if (!checkinDate) {
                     infoPanel.textContent = 'Выберите дату заезда';
                     confirmButton.disabled = true;
@@ -337,22 +355,15 @@
                 return `${day}.${month}`;
             }
 
-            prevMonthBtn.addEventListener('click', () => {
-                currentMonth--;
-                if (currentMonth < 0) {
-                    currentMonth = 11;
-                    currentYear--;
+            window.addEventListener('scroll', () => {
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                   currentMonth++;
+                   if (currentMonth > 11) {
+                       currentMonth = 0;
+                       currentYear++;
+                   }
+                   fetchAndRenderMonth(currentYear, currentMonth);
                 }
-                fetchAndRenderCalendar();
-            });
-
-            nextMonthBtn.addEventListener('click', () => {
-                currentMonth++;
-                if (currentMonth > 11) {
-                    currentMonth = 0;
-                    currentYear++;
-                }
-                fetchAndRenderCalendar();
             });
 
             confirmButton.addEventListener('click', () => {
@@ -369,8 +380,15 @@
                 }
             });
 
-            renderWeekdays();
-            fetchAndRenderCalendar();
+            function main() {
+                // Загружаем первые 3 месяца при старте
+                fetchAndRenderMonth(currentYear, currentMonth);
+                let nextMonth = currentMonth + 1, nextYear = currentYear;
+                if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+                fetchAndRenderMonth(nextYear, nextMonth);
+            }
+
+            main();
         });
     </script>
 </body>
