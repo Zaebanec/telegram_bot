@@ -12,12 +12,10 @@
             --tg-button: var(--tg-theme-button-color, #2481cc);
             --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
-            --price-rule-bg: #e1f5fe;
-            --booked-bg: #ffebee;
+            --booked-bg: #ffcdd2;
             --manual-block-bg: #e0e0e0;
         }
         html[data-theme="dark"] {
-            --price-rule-bg: #01579b;
             --booked-bg: #b71c1c;
             --manual-block-bg: #424242;
         }
@@ -26,7 +24,7 @@
             background-color: var(--tg-bg);
             color: var(--tg-text);
             margin: 0;
-            padding: 15px 15px 120px 15px; /* Добавляем отступ снизу для action-bar */
+            padding: 15px 15px 120px 15px;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
@@ -35,23 +33,8 @@
             max-width: 420px;
             margin: 0 auto;
         }
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-top: 20px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--tg-secondary-bg);
-            padding-bottom: 10px;
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-        .calendar-header button {
-            background: none; border: none; font-size: 24px; cursor: pointer; color: var(--tg-text);
-        }
+        .calendar-month-container { margin-bottom: 25px; }
+        .calendar-header { text-align: center; padding: 10px 0; }
         .calendar-month-year { font-weight: 600; font-size: 18px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .calendar-day, .calendar-weekday {
@@ -62,71 +45,36 @@
         .calendar-day { cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
         .day-number { font-size: 15px; font-weight: 500; }
         .day-price { font-size: 9px; color: var(--tg-hint); margin-top: 2px; }
-        .calendar-day:not(.disabled):hover { background-color: var(--tg-secondary-bg); }
         .calendar-day.disabled { color: var(--tg-hint); cursor: not-allowed; opacity: 0.6; }
         .calendar-day.booked { background-color: var(--booked-bg); }
         .calendar-day.manual-block { background-color: var(--manual-block-bg); }
-        .calendar-day.price-rule { background-color: var(--price-rule-bg); }
-        .calendar-day.selection-start { background-color: var(--tg-button); color: var(--tg-button-text); border-radius: 50% 0 0 50%;}
-        .calendar-day.selection-end { background-color: var(--tg-button); color: var(--tg-button-text); border-radius: 0 50% 50% 0;}
+        .calendar-day.selection-start, .calendar-day.selection-end { background-color: var(--tg-button); color: var(--tg-button-text); }
+        .calendar-day.selection-start .day-price, .calendar-day.selection-end .day-price { color: var(--tg-button-text); }
         .calendar-day.in-selection-range { background-color: var(--tg-secondary-bg); border-radius: 0; }
-        .calendar-day.selection-start.selection-end { border-radius: 50%; }
         .padding { visibility: hidden; }
 
         .action-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--tg-secondary-bg);
-            padding: 15px;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: var(--tg-secondary-bg); padding: 15px;
             box-shadow: 0 -5px 15px -5px rgba(0,0,0,0.1);
-            transform: translateY(100%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 1000;
+            transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1000;
         }
-        .action-bar.visible {
-            transform: translateY(0);
-        }
-        .action-bar-content {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 420px;
-            margin: 0 auto;
-        }
-        .action-bar-info {
-            text-align: center;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        .action-bar-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .action-bar.visible { transform: translateY(0); }
+        .action-bar-content { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto; }
+        .action-bar-info { text-align: center; font-size: 14px; margin-bottom: 5px; }
+        .action-bar-buttons { display: flex; gap: 10px; }
         .action-bar-buttons button {
-            flex-grow: 1;
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            flex-grow: 1; width: 100%; padding: 12px; border: none; border-radius: 8px;
             font-size: 16px; font-weight: 600; cursor: pointer;
         }
         #set-price-btn { background-color: var(--tg-button); color: var(--tg-button-text); }
         #toggle-block-btn { background-color: var(--tg-hint); color: var(--tg-text); }
-
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="section-title">Календарь и Цены</div>
-        <div class="calendar-wrapper">
-            <div class="calendar-header">
-                <button id="prev-month-btn">&lsaquo;</button>
-                <span id="month-year-label"></span>
-                <button id="next-month-btn">&rsaquo;</button>
-            </div>
-            <div class="calendar-grid" id="weekdays-grid"></div>
-            <div class="calendar-grid" id="calendar-grid"></div>
-        </div>
+    <div class="container" id="calendar-body">
+        <!-- Сюда будут добавляться месяцы с помощью скроллинга -->
     </div>
 
     <!-- Панель действий -->
@@ -147,67 +95,72 @@
             tg.ready();
             tg.expand();
 
-            if (tg.colorScheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
+            if (tg.colorScheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 
-            // Элементы UI
-            const monthYearLabel = document.getElementById('month-year-label');
-            const calendarGrid = document.getElementById('calendar-grid');
-            const weekdaysGrid = document.getElementById('weekdays-grid');
-            const prevMonthBtn = document.getElementById('prev-month-btn');
-            const nextMonthBtn = document.getElementById('next-month-btn');
+            const calendarBody = document.getElementById('calendar-body');
             const actionBar = document.getElementById('action-bar');
             const actionBarInfo = document.getElementById('action-bar-info');
             const setPriceBtn = document.getElementById('set-price-btn');
             const toggleBlockBtn = document.getElementById('toggle-block-btn');
-
-            // Состояние
+            
             let currentMonth = new Date().getMonth();
             let currentYear = new Date().getFullYear();
             let calendarData = {}; 
             let selectionStart = null;
             let selectionEnd = null;
+            let isLoading = false;
+            let loadedMonths = new Set();
 
             const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('property_id');
-            const API_BASE_URL = "https://4ec5-162-19-62-155.ngrok-free.app";
+            const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
 
-            function renderWeekdays() {
-                weekdaysGrid.innerHTML = '';
-                dayNames.forEach(day => {
-                    weekdaysGrid.innerHTML += `<div class="calendar-weekday">${day}</div>`;
-                });
-            }
-            
-            async function fetchAndRenderAll() {
-                if (!propertyId) return;
-                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${currentYear}&month=${currentMonth + 1}`;
+            async function fetchAndRenderMonth(year, month) {
+                const monthKey = `${year}-${month}`;
+                if (isLoading || loadedMonths.has(monthKey)) return;
+                isLoading = true;
+
+                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${year}&month=${month + 1}`;
                 try {
                     const response = await fetch(fetchUrl, { headers: { 'ngrok-skip-browser-warning': 'true' } });
-                    if (!response.ok) throw new Error('Ошибка сети при загрузке календаря');
+                    if (!response.ok) throw new Error('Ошибка сети');
                     const data = await response.json();
                     
-                    calendarData = {};
-                    data.forEach(dayInfo => {
-                        calendarData[dayInfo.date] = dayInfo;
-                    });
-                    renderCalendar();
+                    data.forEach(dayInfo => { calendarData[dayInfo.date] = dayInfo; });
+                    renderMonth(year, month);
+                    loadedMonths.add(monthKey);
                 } catch (error) {
                     console.error('Fetch Error:', error);
-                    tg.showAlert("Не удалось загрузить данные. Проверьте ngrok-туннель.");
+                    tg.showAlert("Не удалось загрузить данные.");
+                } finally {
+                    isLoading = false;
                 }
             }
             
-            function renderCalendar() {
-                calendarGrid.innerHTML = '';
-                monthYearLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            function renderMonth(year, month) {
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'calendar-month-container';
+
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.innerHTML = `<span class="calendar-month-year">${monthNames[month]} ${year}</span>`;
+                monthContainer.appendChild(header);
+
+                const weekdaysGrid = document.createElement('div');
+                weekdaysGrid.className = 'calendar-grid';
+                dayNames.forEach(day => {
+                    weekdaysGrid.innerHTML += `<div class="calendar-weekday">${day}</div>`;
+                });
+                monthContainer.appendChild(weekdaysGrid);
+
+                const calendarGrid = document.createElement('div');
+                calendarGrid.className = 'calendar-grid';
                 
-                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const startingDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
 
                 for (let i = 0; i < startingDay; i++) {
@@ -223,7 +176,7 @@
                     dayNumber.textContent = day;
                     dayEl.appendChild(dayNumber);
 
-                    const currentDate = new Date(currentYear, currentMonth, day);
+                    const currentDate = new Date(year, month, day);
                     const currentDateStr = currentDate.toISOString().split('T')[0];
                     const dayData = calendarData[currentDateStr];
 
@@ -235,12 +188,12 @@
                             case 'past':
                                 dayEl.classList.add('disabled');
                                 break;
-                            case 'booked': // Даты, забронированные клиентами
+                            case 'booked':
                                 dayEl.classList.add('disabled', 'booked');
                                 dayPrice.textContent = 'Бронь';
                                 dayEl.appendChild(dayPrice);
                                 break;
-                            case 'manual_block': // Даты, заблокированные владельцем
+                            case 'manual_block':
                                 dayEl.classList.add('disabled', 'manual-block');
                                 dayPrice.textContent = dayData.comment || 'Закрыто';
                                 dayEl.appendChild(dayPrice);
@@ -256,28 +209,23 @@
                         }
                     }
 
-                    // Стилизация выделенного диапазона
                     if (selectionStart && selectionEnd) {
                         const start = new Date(selectionStart);
                         const end = new Date(selectionEnd);
-                        if (currentDate >= start && currentDate <= end) {
-                            dayEl.classList.add('in-selection-range');
-                        }
+                        if (currentDate >= start && currentDate <= end) dayEl.classList.add('in-selection-range');
                     }
-                    if (selectionStart && currentDateStr === selectionStart) {
-                        dayEl.classList.add('selection-start');
-                    }
-                     if (selectionEnd && currentDateStr === selectionEnd) {
-                        dayEl.classList.add('selection-end');
-                    }
-
+                    if (selectionStart && currentDateStr === selectionStart) dayEl.classList.add('selection-start');
+                    if (selectionEnd && currentDateStr === selectionEnd) dayEl.classList.add('selection-end');
+                    if (selectionStart && selectionEnd && selectionStart === selectionEnd && currentDateStr === selectionStart) dayEl.classList.add('selection-start-end');
+                    
                     calendarGrid.appendChild(dayEl);
                 }
+                monthContainer.appendChild(calendarGrid);
+                calendarBody.appendChild(monthContainer);
             }
 
             function onDayClick(event) {
                 const selectedDateStr = event.currentTarget.dataset.date;
-
                 if (!selectionStart || (selectionStart && selectionEnd)) {
                     selectionStart = selectedDateStr;
                     selectionEnd = null;
@@ -295,23 +243,39 @@
             }
 
             function updateUI() {
-                renderCalendar();
+                // Вместо полной перерисовки, просто обновляем классы у существующих дней
+                document.querySelectorAll('.calendar-day').forEach(dayEl => {
+                    dayEl.classList.remove('in-selection-range', 'selection-start', 'selection-end');
+                    const dateStr = dayEl.dataset.date;
+                    if (dateStr) {
+                         if (selectionStart && selectionEnd) {
+                            const start = new Date(selectionStart);
+                            const end = new Date(selectionEnd);
+                            const current = new Date(dateStr);
+                            if (current >= start && current <= end) dayEl.classList.add('in-selection-range');
+                        }
+                        if (selectionStart && dateStr === selectionStart) dayEl.classList.add('selection-start');
+                        if (selectionEnd && dateStr === selectionEnd) dayEl.classList.add('selection-end');
+                        if (selectionStart && selectionEnd && selectionStart === selectionEnd) dayEl.classList.add('selection-start-end');
+                    }
+                });
+
+
                 if (selectionStart && selectionEnd) {
                     actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)} - ${formatDate(selectionEnd)}`;
-                    updateToggleButton();
+                    updateToggleButtonText();
                     actionBar.classList.add('visible');
                 } else if (selectionStart) {
                     actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)}. Выберите дату окончания.`;
-                    updateToggleButton();
+                    updateToggleButtonText();
                     actionBar.classList.add('visible');
                 } else {
                     actionBar.classList.remove('visible');
                 }
             }
-
-            function updateToggleButton() {
-                // Логика для определения, блокировать или разблокировать
-                let blockedCount = 0;
+            
+            function updateToggleButtonText() {
+                 let blockedCount = 0;
                 let totalCount = 0;
                 const start = new Date(selectionStart);
                 const end = selectionEnd ? new Date(selectionEnd) : start;
@@ -326,12 +290,7 @@
                         }
                     }
                 }
-                
-                if (blockedCount > totalCount / 2) {
-                    toggleBlockBtn.textContent = 'Разблокировать';
-                } else {
-                    toggleBlockBtn.textContent = 'Блокировать';
-                }
+                toggleBlockBtn.textContent = (blockedCount > totalCount / 2) ? 'Разблокировать' : 'Блокировать';
             }
 
             function formatDate(dateStr) {
@@ -339,71 +298,61 @@
                 return `${day}.${month}.${year}`;
             }
 
-            prevMonthBtn.addEventListener('click', () => {
-                currentMonth--;
-                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-                fetchAndRenderAll();
-            });
+            function getRangeOfDates() {
+                if (!selectionStart) return [];
+                const dates = [];
+                const end = selectionEnd || selectionStart;
+                for (let d = new Date(selectionStart); d <= new Date(end); d.setDate(d.getDate() + 1)) {
+                    dates.push(d.toISOString().split('T')[0]);
+                }
+                return dates;
+            }
 
-            nextMonthBtn.addEventListener('click', () => {
-                currentMonth++;
-                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-                fetchAndRenderAll();
-            });
-
-            setPriceBtn.addEventListener('click', async () => {
+            setPriceBtn.addEventListener('click', () => {
                 if (!selectionStart || !selectionEnd) return;
                 
                 tg.showPopup({
                     title: 'Новая цена',
                     message: `Введите цену для периода с ${formatDate(selectionStart)} по ${formatDate(selectionEnd)}`,
-                    buttons: [{type: 'default', text: 'Сохранить'}, {type: 'cancel'}]
-                }, async (price) => {
-                    if (price && !isNaN(parseInt(price))) {
+                    buttons: [{type: 'ok', text: 'Сохранить'}, {type: 'cancel'}]
+                }, async (text) => {
+                    if (text && !isNaN(parseInt(text))) {
                          try {
                             await fetch(`${API_BASE_URL}/api/owner/price_rule`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     property_id: propertyId, start_date: selectionStart,
-                                    end_date: selectionEnd, price: parseInt(price)
+                                    end_date: selectionEnd, price: parseInt(text)
                                 })
                             });
                             tg.HapticFeedback.notificationOccurred('success');
-                            resetSelection();
-                            fetchAndRenderAll();
-                        } catch (error) {
-                            tg.showAlert('Не удалось установить цену.');
-                        }
-                    } else if (price) {
+                            resetSelectionAndReload();
+                        } catch (error) { tg.showAlert('Не удалось установить цену.'); }
+                    } else if (text) {
                         tg.showAlert('Пожалуйста, введите корректное число.');
                     }
                 });
             });
 
             toggleBlockBtn.addEventListener('click', async () => {
-                if (!selectionStart) return;
-                const end = selectionEnd || selectionStart;
-                
-                const datesToToggle = [];
-                for (let d = new Date(selectionStart); d <= new Date(end); d.setDate(d.getDate() + 1)) {
-                    datesToToggle.push(d.toISOString().split('T')[0]);
-                }
+                const datesToToggle = getRangeOfDates();
+                if (datesToToggle.length === 0) return;
                 
                 const isBlocking = toggleBlockBtn.textContent === 'Блокировать';
+                let comment = null;
 
                 if (isBlocking) {
                     tg.showPopup({
-                        title: 'Блокировка дат',
-                        message: `Вы уверены, что хотите заблокировать выбранные даты? Вы можете добавить комментарий (например, "Ремонт").`,
-                        buttons: [{type: 'default', text: 'Заблокировать'}, {id: 'block_without_comment', text: 'Просто заблокировать'}, {type: 'cancel'}]
-                    }, async (btnId, comment) => {
-                         if (btnId === 'default' || btnId === 'block_without_comment') {
-                            await performToggle(datesToToggle, comment || null);
+                        title: 'Комментарий к блокировке',
+                        message: 'Можете оставить комментарий (например, "Ремонт"). Оставьте поле пустым, если не нужно.',
+                        buttons: [{type: 'ok', text: 'Заблокировать'}, {type: 'cancel'}]
+                    }, async (text) => {
+                        if (typeof text !== 'undefined') { // User pressed a button
+                           await performToggle(datesToToggle, text || null);
                         }
                     });
                 } else {
-                     await performToggle(datesToToggle, null); // При разблокировке комментарий не нужен
+                     await performToggle(datesToToggle, null); // Unblocking
                 }
             });
 
@@ -411,27 +360,46 @@
                  try {
                     for (const dateStr of dates) {
                          await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ property_id: propertyId, date: dateStr, comment: comment })
                         });
                     }
                     tg.HapticFeedback.notificationOccurred('success');
-                    resetSelection();
-                    fetchAndRenderAll();
+                    resetSelectionAndReload();
                 } catch(error) {
                     tg.showAlert('Не удалось изменить статус дат.');
                 }
             }
 
-            function resetSelection() {
+            function resetSelectionAndReload() {
                 selectionStart = null;
                 selectionEnd = null;
+                loadedMonths.clear();
+                calendarBody.innerHTML = '';
+                main();
                 updateUI();
             }
 
-            renderWeekdays();
-            fetchAndRenderAll();
+            function main() {
+                renderWeekdays();
+                // Загружаем первые 3 месяца при старте
+                fetchAndRenderMonth(currentYear, currentMonth);
+                
+                let nextDate = new Date(currentYear, currentMonth + 1, 1);
+                fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
+
+                nextDate = new Date(currentYear, currentMonth + 2, 1);
+                fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
+            }
+
+            window.onscroll = () => {
+                if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50) {
+                   let nextDate = new Date(currentYear, currentMonth + loadedMonths.size, 1);
+                   fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
+                }
+            };
+            
+            main();
         });
     </script>
 </body>
