@@ -235,9 +235,14 @@
                             case 'past':
                                 dayEl.classList.add('disabled');
                                 break;
-                            case 'unavailable': // Это забронированные даты
+                            case 'booked': // Даты, забронированные клиентами
                                 dayEl.classList.add('disabled', 'booked');
                                 dayPrice.textContent = 'Бронь';
+                                dayEl.appendChild(dayPrice);
+                                break;
+                            case 'manual_block': // Даты, заблокированные владельцем
+                                dayEl.classList.add('disabled', 'manual-block');
+                                dayPrice.textContent = dayData.comment || 'Закрыто';
                                 dayEl.appendChild(dayPrice);
                                 break;
                             case 'available':
@@ -282,7 +287,6 @@
                     if (selectedD >= startD) {
                         selectionEnd = selectedDateStr;
                     } else {
-                        // Если выбрана дата раньше, начинаем заново
                         selectionStart = selectedDateStr;
                         selectionEnd = null;
                     }
@@ -294,12 +298,39 @@
                 renderCalendar();
                 if (selectionStart && selectionEnd) {
                     actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)} - ${formatDate(selectionEnd)}`;
+                    updateToggleButton();
                     actionBar.classList.add('visible');
                 } else if (selectionStart) {
                     actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)}. Выберите дату окончания.`;
+                    updateToggleButton();
                     actionBar.classList.add('visible');
                 } else {
                     actionBar.classList.remove('visible');
+                }
+            }
+
+            function updateToggleButton() {
+                // Логика для определения, блокировать или разблокировать
+                let blockedCount = 0;
+                let totalCount = 0;
+                const start = new Date(selectionStart);
+                const end = selectionEnd ? new Date(selectionEnd) : start;
+
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    const dayData = calendarData[dateStr];
+                    if (dayData && dayData.status !== 'past' && dayData.status !== 'booked') {
+                        totalCount++;
+                        if (dayData.status === 'manual_block') {
+                            blockedCount++;
+                        }
+                    }
+                }
+                
+                if (blockedCount > totalCount / 2) {
+                    toggleBlockBtn.textContent = 'Разблокировать';
+                } else {
+                    toggleBlockBtn.textContent = 'Блокировать';
                 }
             }
 
@@ -328,56 +359,70 @@
                     message: `Введите цену для периода с ${formatDate(selectionStart)} по ${formatDate(selectionEnd)}`,
                     buttons: [{type: 'default', text: 'Сохранить'}, {type: 'cancel'}]
                 }, async (price) => {
-                    if (price) {
+                    if (price && !isNaN(parseInt(price))) {
                          try {
-                            const response = await fetch(`${API_BASE_URL}/api/owner/price_rule`, {
+                            await fetch(`${API_BASE_URL}/api/owner/price_rule`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                                 body: JSON.stringify({
-                                    property_id: propertyId,
-                                    start_date: selectionStart,
-                                    end_date: selectionEnd,
-                                    price: parseInt(price)
+                                    property_id: propertyId, start_date: selectionStart,
+                                    end_date: selectionEnd, price: parseInt(price)
                                 })
                             });
-                            if (!response.ok) throw new Error('Ошибка сервера');
                             tg.HapticFeedback.notificationOccurred('success');
                             resetSelection();
                             fetchAndRenderAll();
                         } catch (error) {
                             tg.showAlert('Не удалось установить цену.');
                         }
+                    } else if (price) {
+                        tg.showAlert('Пожалуйста, введите корректное число.');
                     }
                 });
             });
 
             toggleBlockBtn.addEventListener('click', async () => {
-                if (!selectionStart || !selectionEnd) return;
-
+                if (!selectionStart) return;
+                const end = selectionEnd || selectionStart;
+                
                 const datesToToggle = [];
-                for (let d = new Date(selectionStart); d <= new Date(selectionEnd); d.setDate(d.getDate() + 1)) {
+                for (let d = new Date(selectionStart); d <= new Date(end); d.setDate(d.getDate() + 1)) {
                     datesToToggle.push(d.toISOString().split('T')[0]);
                 }
+                
+                const isBlocking = toggleBlockBtn.textContent === 'Блокировать';
 
-                try {
-                    for (const dateStr of datesToToggle) {
-                        const dayData = calendarData[dateStr];
-                        // Блокируем только доступные даты
-                        if (dayData && dayData.status === 'available') {
-                            await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                                body: JSON.stringify({ property_id: propertyId, date: dateStr })
-                            });
+                if (isBlocking) {
+                    tg.showPopup({
+                        title: 'Блокировка дат',
+                        message: `Вы уверены, что хотите заблокировать выбранные даты? Вы можете добавить комментарий (например, "Ремонт").`,
+                        buttons: [{type: 'default', text: 'Заблокировать'}, {id: 'block_without_comment', text: 'Просто заблокировать'}, {type: 'cancel'}]
+                    }, async (btnId, comment) => {
+                         if (btnId === 'default' || btnId === 'block_without_comment') {
+                            await performToggle(datesToToggle, comment || null);
                         }
+                    });
+                } else {
+                     await performToggle(datesToToggle, null); // При разблокировке комментарий не нужен
+                }
+            });
+
+            async function performToggle(dates, comment) {
+                 try {
+                    for (const dateStr of dates) {
+                         await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                            body: JSON.stringify({ property_id: propertyId, date: dateStr, comment: comment })
+                        });
                     }
                     tg.HapticFeedback.notificationOccurred('success');
                     resetSelection();
                     fetchAndRenderAll();
                 } catch(error) {
-                    tg.showAlert('Не удалось заблокировать даты.');
+                    tg.showAlert('Не удалось изменить статус дат.');
                 }
-            });
+            }
 
             function resetSelection() {
                 selectionStart = null;
