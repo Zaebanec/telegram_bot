@@ -12,8 +12,8 @@
             --tg-button: var(--tg-theme-button-color, #2481cc);
             --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
             --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
-            --booked-bg: #ffcdd2;
-            --manual-block-bg: #e0e0e0;
+            --booked-bg: #ffcdd2; /* Красный для броней */
+            --manual-block-bg: #e0e0e0; /* Серый для ручных блокировок */
         }
         html[data-theme="dark"] {
             --booked-bg: #b71c1c;
@@ -24,7 +24,7 @@
             background-color: var(--tg-bg);
             color: var(--tg-text);
             margin: 0;
-            padding: 15px 15px 120px 15px;
+            padding: 15px 15px 120px 15px; /* Отступ снизу для панели действий */
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
@@ -48,10 +48,14 @@
         .calendar-day.disabled { color: var(--tg-hint); cursor: not-allowed; opacity: 0.6; }
         .calendar-day.booked { background-color: var(--booked-bg); }
         .calendar-day.manual-block { background-color: var(--manual-block-bg); }
-        .calendar-day.selection-start, .calendar-day.selection-end { background-color: var(--tg-button); color: var(--tg-button-text); }
+        .calendar-day.selection-start, .calendar-day.selection-end {
+            background-color: var(--tg-button); color: var(--tg-button-text);
+        }
         .calendar-day.selection-start .day-price, .calendar-day.selection-end .day-price { color: var(--tg-button-text); }
         .calendar-day.in-selection-range { background-color: var(--tg-secondary-bg); border-radius: 0; }
-        .padding { visibility: hidden; }
+        .calendar-day.selection-start { border-radius: 8px 0 0 8px; }
+        .calendar-day.selection-end { border-radius: 0 8px 8px 0; }
+        .calendar-day.selection-start-end { border-radius: 8px; }
 
         .action-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
@@ -77,8 +81,7 @@
         <!-- Сюда будут добавляться месяцы с помощью скроллинга -->
     </div>
 
-    <!-- Панель действий -->
-    <div id="action-bar" class="action-bar">
+    <div class="action-bar" id="action-bar">
         <div class="action-bar-content">
             <div id="action-bar-info" class="action-bar-info"></div>
             <div class="action-bar-buttons">
@@ -116,7 +119,7 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('property_id');
-            const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
+            const API_BASE_URL = "https://4ec5-162-19-62-155.ngrok-free.app";
 
             async function fetchAndRenderMonth(year, month) {
                 const monthKey = `${year}-${month}`;
@@ -143,6 +146,7 @@
             function renderMonth(year, month) {
                 const monthContainer = document.createElement('div');
                 monthContainer.className = 'calendar-month-container';
+                monthContainer.dataset.monthKey = `${year}-${month}`;
 
                 const header = document.createElement('div');
                 header.className = 'calendar-header';
@@ -168,56 +172,45 @@
                 }
 
                 for (let day = 1; day <= daysInMonth; day++) {
+                    const currentDate = new Date(year, month, day);
+                    const currentDateStr = currentDate.toISOString().split('T')[0];
+                    const dayData = calendarData[currentDateStr] || { status: 'past' };
+
                     const dayEl = document.createElement('div');
                     dayEl.className = 'calendar-day';
+                    dayEl.dataset.date = currentDateStr;
                     
                     const dayNumber = document.createElement('div');
                     dayNumber.className = 'day-number';
                     dayNumber.textContent = day;
                     dayEl.appendChild(dayNumber);
 
-                    const currentDate = new Date(year, month, day);
-                    const currentDateStr = currentDate.toISOString().split('T')[0];
-                    const dayData = calendarData[currentDateStr];
-
-                    if (dayData) {
-                        const dayPrice = document.createElement('div');
-                        dayPrice.className = 'day-price';
-                        
-                        switch(dayData.status) {
-                            case 'past':
-                                dayEl.classList.add('disabled');
-                                break;
-                            case 'booked':
-                                dayEl.classList.add('disabled', 'booked');
-                                dayPrice.textContent = 'Бронь';
-                                dayEl.appendChild(dayPrice);
-                                break;
-                            case 'manual_block':
-                                dayEl.classList.add('disabled', 'manual-block');
-                                dayPrice.textContent = dayData.comment || 'Закрыто';
-                                dayEl.appendChild(dayPrice);
-                                break;
-                            case 'available':
-                                dayEl.dataset.date = currentDateStr;
-                                dayEl.addEventListener('click', onDayClick);
-                                if (dayData.price) {
-                                    dayPrice.textContent = dayData.price;
-                                    dayEl.appendChild(dayPrice);
-                                }
-                                break;
-                        }
-                    }
-
-                    if (selectionStart && selectionEnd) {
-                        const start = new Date(selectionStart);
-                        const end = new Date(selectionEnd);
-                        if (currentDate >= start && currentDate <= end) dayEl.classList.add('in-selection-range');
-                    }
-                    if (selectionStart && currentDateStr === selectionStart) dayEl.classList.add('selection-start');
-                    if (selectionEnd && currentDateStr === selectionEnd) dayEl.classList.add('selection-end');
-                    if (selectionStart && selectionEnd && selectionStart === selectionEnd && currentDateStr === selectionStart) dayEl.classList.add('selection-start-end');
+                    const dayPrice = document.createElement('div');
+                    dayPrice.className = 'day-price';
                     
+                    switch(dayData.status) {
+                        case 'past':
+                            dayEl.classList.add('disabled');
+                            break;
+                        case 'booked':
+                            dayEl.classList.add('disabled', 'booked');
+                            dayPrice.textContent = 'Бронь';
+                            dayEl.appendChild(dayPrice);
+                            break;
+                        case 'manual_block':
+                            dayEl.classList.add('manual-block');
+                            dayEl.addEventListener('click', onDayClick);
+                            dayPrice.textContent = dayData.comment || 'Закрыто';
+                            dayEl.appendChild(dayPrice);
+                            break;
+                        case 'available':
+                            dayEl.addEventListener('click', onDayClick);
+                            if (dayData.price) {
+                                dayPrice.textContent = dayData.price;
+                                dayEl.appendChild(dayPrice);
+                            }
+                            break;
+                    }
                     calendarGrid.appendChild(dayEl);
                 }
                 monthContainer.appendChild(calendarGrid);
@@ -228,7 +221,7 @@
                 const selectedDateStr = event.currentTarget.dataset.date;
                 if (!selectionStart || (selectionStart && selectionEnd)) {
                     selectionStart = selectedDateStr;
-                    selectionEnd = null;
+                    selectionEnd = selectedDateStr; // Для одиночного клика выделяем один день
                 } else {
                     const selectedD = new Date(selectedDateStr);
                     const startD = new Date(selectionStart);
@@ -236,60 +229,53 @@
                         selectionEnd = selectedDateStr;
                     } else {
                         selectionStart = selectedDateStr;
-                        selectionEnd = null;
                     }
                 }
                 updateUI();
             }
 
             function updateUI() {
-                // Вместо полной перерисовки, просто обновляем классы у существующих дней
                 document.querySelectorAll('.calendar-day').forEach(dayEl => {
-                    dayEl.classList.remove('in-selection-range', 'selection-start', 'selection-end');
+                    dayEl.classList.remove('in-selection-range', 'selection-start', 'selection-end', 'selection-start-end');
                     const dateStr = dayEl.dataset.date;
-                    if (dateStr) {
-                         if (selectionStart && selectionEnd) {
-                            const start = new Date(selectionStart);
-                            const end = new Date(selectionEnd);
-                            const current = new Date(dateStr);
-                            if (current >= start && current <= end) dayEl.classList.add('in-selection-range');
+                    if (dateStr && selectionStart) {
+                        const start = new Date(selectionStart);
+                        const end = selectionEnd ? new Date(selectionEnd) : start;
+                        const current = new Date(dateStr);
+
+                        if (current >= start && current <= end) {
+                             if (start.getTime() === end.getTime()) {
+                                dayEl.classList.add('selection-start-end');
+                             } else {
+                                dayEl.classList.add('in-selection-range');
+                                if (current.getTime() === start.getTime()) dayEl.classList.add('selection-start');
+                                if (current.getTime() === end.getTime()) dayEl.classList.add('selection-end');
+                             }
                         }
-                        if (selectionStart && dateStr === selectionStart) dayEl.classList.add('selection-start');
-                        if (selectionEnd && dateStr === selectionEnd) dayEl.classList.add('selection-end');
-                        if (selectionStart && selectionEnd && selectionStart === selectionEnd) dayEl.classList.add('selection-start-end');
                     }
                 });
 
-
-                if (selectionStart && selectionEnd) {
-                    actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)} - ${formatDate(selectionEnd)}`;
-                    updateToggleButtonText();
-                    actionBar.classList.add('visible');
-                } else if (selectionStart) {
-                    actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)}. Выберите дату окончания.`;
+                if (selectionStart) {
+                    const end = selectionEnd || selectionStart;
+                    actionBarInfo.textContent = `Выбрано: ${formatDate(selectionStart)} - ${formatDate(end)}`;
                     updateToggleButtonText();
                     actionBar.classList.add('visible');
                 } else {
                     actionBar.classList.remove('visible');
                 }
             }
-            
-            function updateToggleButtonText() {
-                 let blockedCount = 0;
-                let totalCount = 0;
-                const start = new Date(selectionStart);
-                const end = selectionEnd ? new Date(selectionEnd) : start;
 
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const dateStr = d.toISOString().split('T')[0];
+            function updateToggleButtonText() {
+                let blockedCount = 0;
+                let totalCount = 0;
+                const dates = getRangeOfDates();
+                dates.forEach(dateStr => {
                     const dayData = calendarData[dateStr];
                     if (dayData && dayData.status !== 'past' && dayData.status !== 'booked') {
                         totalCount++;
-                        if (dayData.status === 'manual_block') {
-                            blockedCount++;
-                        }
+                        if (dayData.status === 'manual_block') blockedCount++;
                     }
-                }
+                });
                 toggleBlockBtn.textContent = (blockedCount > totalCount / 2) ? 'Разблокировать' : 'Блокировать';
             }
 
@@ -307,34 +293,35 @@
                 }
                 return dates;
             }
-
+            
             setPriceBtn.addEventListener('click', () => {
-                if (!selectionStart || !selectionEnd) return;
+                const range = getRangeOfDates();
+                if (range.length === 0) return;
                 
                 tg.showPopup({
                     title: 'Новая цена',
-                    message: `Введите цену для периода с ${formatDate(selectionStart)} по ${formatDate(selectionEnd)}`,
-                    buttons: [{type: 'ok', text: 'Сохранить'}, {type: 'cancel'}]
-                }, async (text) => {
-                    if (text && !isNaN(parseInt(text))) {
+                    message: `Введите цену для выбранного периода.`,
+                    buttons: [{id: 'save', type: 'default', text: 'Сохранить'}, {type: 'cancel'}]
+                }, async (btnId, price) => {
+                    if (btnId === 'save' && price && !isNaN(parseInt(price))) {
                          try {
                             await fetch(`${API_BASE_URL}/api/owner/price_rule`, {
                                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    property_id: propertyId, start_date: selectionStart,
-                                    end_date: selectionEnd, price: parseInt(text)
+                                    property_id: propertyId, start_date: range[0],
+                                    end_date: range[range.length - 1], price: parseInt(price)
                                 })
                             });
                             tg.HapticFeedback.notificationOccurred('success');
                             resetSelectionAndReload();
                         } catch (error) { tg.showAlert('Не удалось установить цену.'); }
-                    } else if (text) {
+                    } else if (btnId === 'save') {
                         tg.showAlert('Пожалуйста, введите корректное число.');
                     }
                 });
             });
 
-            toggleBlockBtn.addEventListener('click', async () => {
+            toggleBlockBtn.addEventListener('click', () => {
                 const datesToToggle = getRangeOfDates();
                 if (datesToToggle.length === 0) return;
                 
@@ -345,24 +332,27 @@
                     tg.showPopup({
                         title: 'Комментарий к блокировке',
                         message: 'Можете оставить комментарий (например, "Ремонт"). Оставьте поле пустым, если не нужно.',
-                        buttons: [{type: 'ok', text: 'Заблокировать'}, {type: 'cancel'}]
-                    }, async (text) => {
-                        if (typeof text !== 'undefined') { // User pressed a button
-                           await performToggle(datesToToggle, text || null);
+                        buttons: [{id: 'save', type: 'default', text: 'Заблокировать'}, {type: 'cancel'}]
+                    }, async (btnId, text) => {
+                        if (btnId === 'save') {
+                           await performToggle(datesToToggle, text || null, isBlocking);
                         }
                     });
                 } else {
-                     await performToggle(datesToToggle, null); // Unblocking
+                     performToggle(datesToToggle, null, isBlocking); 
                 }
             });
 
             async function performToggle(dates, comment) {
                  try {
                     for (const dateStr of dates) {
-                         await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ property_id: propertyId, date: dateStr, comment: comment })
-                        });
+                         const dayData = calendarData[dateStr];
+                         if (dayData && dayData.status !== 'past' && dayData.status !== 'booked') {
+                             await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ property_id: propertyId, date: dateStr, comment: comment })
+                            });
+                         }
                     }
                     tg.HapticFeedback.notificationOccurred('success');
                     resetSelectionAndReload();
@@ -370,7 +360,7 @@
                     tg.showAlert('Не удалось изменить статус дат.');
                 }
             }
-
+            
             function resetSelectionAndReload() {
                 selectionStart = null;
                 selectionEnd = null;
@@ -382,18 +372,11 @@
 
             function main() {
                 renderWeekdays();
-                // Загружаем первые 3 месяца при старте
                 fetchAndRenderMonth(currentYear, currentMonth);
-                
-                let nextDate = new Date(currentYear, currentMonth + 1, 1);
-                fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
-
-                nextDate = new Date(currentYear, currentMonth + 2, 1);
-                fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
             }
 
             window.onscroll = () => {
-                if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50) {
+                if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 150) {
                    let nextDate = new Date(currentYear, currentMonth + loadedMonths.size, 1);
                    fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
                 }
