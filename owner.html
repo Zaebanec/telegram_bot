@@ -369,18 +369,19 @@
                 main();
                 updateUI();
             }
-
-            function main() {
-                renderWeekdays();
-                fetchAndRenderMonth(currentYear, currentMonth);
-            }
-
+            
+            // ИСПРАВЛЕНИЕ: Переносим объявление функции main в конец
             window.onscroll = () => {
                 if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 150) {
                    let nextDate = new Date(currentYear, currentMonth + loadedMonths.size, 1);
                    fetchAndRenderMonth(nextDate.getFullYear(), nextDate.getMonth());
                 }
             };
+            
+            function main() {
+                renderWeekdays();
+                fetchAndRenderMonth(currentYear, currentMonth);
+            }
             
             main();
         });
