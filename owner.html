@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Управление Объектом</title>
+    <style>
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-text: var(--tg-theme-text-color, #222222);
+            --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            --price-rule-bg: #e1f5fe;
+            --booked-bg: #ffebee;
+        }
+        html[data-theme="dark"] {
+            --price-rule-bg: #01579b;
+            --booked-bg: #b71c1c;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--tg-secondary-bg);
+            padding-bottom: 10px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .calendar-header button {
+            background: none; border: none; font-size: 24px; cursor: pointer; color: var(--tg-text);
+        }
+        .calendar-month-year { font-weight: 600; font-size: 18px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .calendar-day, .calendar-weekday {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 48px; width: 100%; font-size: 14px; border-radius: 8px;
+        }
+        .calendar-weekday { color: var(--tg-hint); font-size: 12px; height: 30px; }
+        .calendar-day { cursor: pointer; transition: background-color 0.2s; }
+        .day-number { font-size: 15px; font-weight: 500; }
+        .day-price { font-size: 9px; color: var(--tg-hint); margin-top: 2px; }
+        .calendar-day:not(.disabled):hover { background-color: var(--tg-secondary-bg); }
+        .calendar-day.disabled { color: var(--tg-hint); cursor: not-allowed; opacity: 0.6; }
+        .calendar-day.disabled .day-number { text-decoration: line-through; }
+        .calendar-day.booked { background-color: var(--booked-bg); }
+        .calendar-day.manual-block { border: 2px solid var(--tg-hint); }
+        .calendar-day.price-rule { background-color: var(--price-rule-bg); }
+        .padding { visibility: hidden; }
+
+        .price-rules-list { list-style: none; padding: 0; }
+        .price-rules-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; background-color: var(--tg-secondary-bg);
+            border-radius: 8px; margin-bottom: 8px; font-size: 14px;
+        }
+        .delete-rule-btn {
+            background: none; border: none; color: #f44336; cursor: pointer; font-size: 20px;
+        }
+        .form-container {
+            background-color: var(--tg-secondary-bg); padding: 15px; border-radius: 12px;
+        }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .form-row input {
+            width: 100%; padding: 10px; border: 1px solid var(--tg-hint);
+            border-radius: 8px; background-color: var(--tg-bg); color: var(--tg-text); font-size: 14px;
+        }
+        #add-rule-btn {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            background-color: var(--tg-button); color: var(--tg-button-text);
+            font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        #add-rule-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="section-title">Календарь Доступности</div>
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <button id="prev-month-btn">&lsaquo;</button>
+                <span id="month-year-label"></span>
+                <button id="next-month-btn">&rsaquo;</button>
+            </div>
+            <div class="calendar-grid" id="weekdays-grid"></div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+
+        <div class="section-title">Ценовые Правила</div>
+        <ul class="price-rules-list" id="price-rules-list">
+            <!-- Сюда будут добавляться правила -->
+        </ul>
+        <div class="form-container">
+            <div class="form-row">
+                <input type="text" id="start-date-input" placeholder="Дата начала (ГГГГ-ММ-ДД)">
+                <input type="text" id="end-date-input" placeholder="Дата конца (ГГГГ-ММ-ДД)">
+            </div>
+            <div class="form-row">
+                <input type="number" id="price-input" placeholder="Новая цена за ночь">
+            </div>
+            <button id="add-rule-btn">Добавить правило</button>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+
+            if (tg.colorScheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+
+            // Элементы UI
+            const monthYearLabel = document.getElementById('month-year-label');
+            const calendarGrid = document.getElementById('calendar-grid');
+            const weekdaysGrid = document.getElementById('weekdays-grid');
+            const rulesList = document.getElementById('price-rules-list');
+            const prevMonthBtn = document.getElementById('prev-month-btn');
+            const nextMonthBtn = document.getElementById('next-month-btn');
+            const addRuleBtn = document.getElementById('add-rule-btn');
+            const startDateInput = document.getElementById('start-date-input');
+            const endDateInput = document.getElementById('end-date-input');
+            const priceInput = document.getElementById('price-input');
+            
+            // Состояние
+            let currentMonth = new Date().getMonth();
+            let currentYear = new Date().getFullYear();
+            let calendarData = {}; 
+
+            const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+            const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+            // Получаем ID объекта из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const propertyId = urlParams.get('property_id');
+            const API_BASE_URL = "https://a5eb-162-19-62-155.ngrok-free.app";
+
+            function renderWeekdays() {
+                weekdaysGrid.innerHTML = '';
+                dayNames.forEach(day => {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-weekday';
+                    dayEl.textContent = day;
+                    weekdaysGrid.appendChild(dayEl);
+                });
+            }
+            
+            async function fetchAndRenderAll() {
+                if (!propertyId) return;
+                
+                // Загружаем данные для текущего отображаемого месяца
+                const fetchUrl = `${API_BASE_URL}/api/calendar_data/${propertyId}?year=${currentYear}&month=${currentMonth + 1}`;
+                try {
+                    const response = await fetch(fetchUrl, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+                    if (!response.ok) throw new Error('Ошибка сети при загрузке календаря');
+                    const data = await response.json();
+                    
+                    calendarData = {};
+                    data.forEach(dayInfo => {
+                        calendarData[dayInfo.date] = dayInfo;
+                    });
+                    
+                    // Загружаем список ценовых правил
+                    const rulesResponse = await fetch(`${API_BASE_URL}/api/owner/calendar_data/${propertyId}`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+                    if (!rulesResponse.ok) throw new Error('Ошибка сети при загрузке правил');
+                    const rulesData = await rulesResponse.json();
+                    
+                    renderCalendar();
+                    renderPriceRules(rulesData.rules);
+
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    tg.showAlert("Не удалось загрузить данные. Проверьте ngrok-туннель.");
+                }
+            }
+            
+            function renderCalendar() {
+                calendarGrid.innerHTML = '';
+                monthYearLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const startingDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+
+                for (let i = 0; i < startingDay; i++) {
+                    calendarGrid.appendChild(document.createElement('div')).className = 'calendar-day padding';
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-day';
+                    
+                    const dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day;
+                    dayEl.appendChild(dayNumber);
+
+                    const currentDate = new Date(currentYear, currentMonth, day);
+                    const currentDateStr = currentDate.toISOString().split('T')[0];
+                    const dayData = calendarData[currentDateStr];
+
+                    if (dayData) {
+                        const dayPrice = document.createElement('div');
+                        dayPrice.className = 'day-price';
+                        
+                        switch(dayData.status) {
+                            case 'past':
+                                dayEl.classList.add('disabled');
+                                break;
+                            case 'unavailable':
+                                dayEl.classList.add('disabled', 'booked');
+                                dayPrice.textContent = 'Бронь';
+                                dayEl.appendChild(dayPrice);
+                                break;
+                            case 'available':
+                                dayEl.dataset.date = currentDateStr;
+                                dayEl.addEventListener('click', onDayClick);
+                                if (dayData.price) {
+                                    dayPrice.textContent = dayData.price;
+                                    dayEl.appendChild(dayPrice);
+                                }
+                                break;
+                        }
+                    }
+                    calendarGrid.appendChild(dayEl);
+                }
+            }
+
+            function renderPriceRules(rules) {
+                rulesList.innerHTML = '';
+                rules.forEach(rule => {
+                    const li = document.createElement('li');
+                    const startDate = new Date(rule.start_date).toLocaleDateString('ru-RU');
+                    const endDate = new Date(rule.end_date).toLocaleDateString('ru-RU');
+                    li.innerHTML = `
+                        <span>${startDate} - ${endDate}: <b>${rule.price} руб.</b></span>
+                        <button class="delete-rule-btn" data-rule-id="${rule.id}">&times;</button>
+                    `;
+                    rulesList.appendChild(li);
+                });
+            }
+            
+            async function onDayClick(event) {
+                const target = event.currentTarget;
+                const date = target.dataset.date;
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/owner/toggle_availability`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                        body: JSON.stringify({ property_id: propertyId, date: date })
+                    });
+                    if (!response.ok) throw new Error('Ошибка сервера');
+                    
+                    tg.HapticFeedback.notificationOccurred('success');
+                    fetchAndRenderAll(); // Перерисовываем все после успешного действия
+
+                } catch (error) {
+                    console.error('Toggle Error:', error);
+                    tg.showAlert('Не удалось изменить статус даты.');
+                }
+            }
+            
+            async function onAddRule() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                const price = priceInput.value;
+
+                if (!startDate || !endDate || !price) {
+                    tg.showAlert('Заполните все поля для создания правила.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/owner/price_rule`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                        body: JSON.stringify({
+                            property_id: propertyId,
+                            start_date: startDate,
+                            end_date: endDate,
+                            price: parseInt(price)
+                        })
+                    });
+                     if (!response.ok) throw new Error('Ошибка сервера');
+
+                    tg.HapticFeedback.notificationOccurred('success');
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    priceInput.value = '';
+                    fetchAndRenderAll();
+
+                } catch (error) {
+                     console.error('Add Rule Error:', error);
+                    tg.showAlert('Не удалось добавить правило.');
+                }
+            }
+            
+            async function onDeleteRule(event) {
+                if (!event.target.matches('.delete-rule-btn')) return;
+                const ruleId = event.target.dataset.ruleId;
+                
+                tg.showConfirm(`Вы уверены, что хотите удалить это ценовое правило?`, async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                             const response = await fetch(`${API_BASE_URL}/api/owner/price_rule/${ruleId}`, {
+                                method: 'DELETE',
+                                headers: { 'ngrok-skip-browser-warning': 'true' }
+                            });
+                            if (!response.ok) throw new Error('Ошибка сервера');
+                            
+                            tg.HapticFeedback.notificationOccurred('success');
+                            fetchAndRenderAll();
+
+                        } catch (error) {
+                            console.error('Delete Rule Error:', error);
+                            tg.showAlert('Не удалось удалить правило.');
+                        }
+                    }
+                });
+            }
+
+            prevMonthBtn.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                fetchAndRenderAll();
+            });
+
+            nextMonthBtn.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                fetchAndRenderAll();
+            });
+            
+            addRuleBtn.addEventListener('click', onAddRule);
+            rulesList.addEventListener('click', onDeleteRule);
+
+            renderWeekdays();
+            fetchAndRenderAll();
+        });
+    </script>
+</body>
+</html>
